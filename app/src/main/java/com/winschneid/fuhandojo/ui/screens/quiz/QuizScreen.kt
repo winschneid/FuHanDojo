@@ -263,7 +263,7 @@ private fun Prompt(question: Question) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     TileGroup(question.shape, tileWidth = 44.dp, caption = "待ちの形")
                     Text("＋", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(horizontal = 8.dp))
-                    TileGroup(listOf(question.winningTile), tileWidth = 44.dp, caption = "和了牌", highlightLast = true)
+                    TileGroup(listOf(question.winningTile), tileWidth = 44.dp, caption = "アガリ牌", highlightLast = true)
                 }
                 Ask("待ちの名前と符は？")
             }
@@ -280,7 +280,7 @@ private fun Prompt(question: Question) {
                 }
                 Ask("合計は何符？")
                 Text(
-                    text = "副底20符から足して、10符単位に切り上げる",
+                    text = "基本の20符（副底）から足して、10符単位に切り上げる",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

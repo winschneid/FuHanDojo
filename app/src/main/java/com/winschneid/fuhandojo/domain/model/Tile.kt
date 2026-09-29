@@ -100,10 +100,10 @@ data class Meld(val kind: MeldKind, val tile: Tile, val open: Boolean) {
 
 enum class Wait(val label: String, val fu: Int) {
     RYANMEN("両面", 0),
-    KANCHAN("嵌張", 2),
-    PENCHAN("辺張", 2),
+    KANCHAN("カンチャン", 2),
+    PENCHAN("ペンチャン", 2),
     TANKI("単騎", 2),
-    SHANPON("双碰", 0),
+    SHANPON("シャンポン", 0),
 }
 
 /**

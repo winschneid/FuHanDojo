@@ -86,7 +86,7 @@ object FuCalculator {
         val pairFu = pairFu(pair, hand.roundWind, hand.seatWind)
         val isPinfu = hand.isClosed && melds.all { it.kind == MeldKind.SEQUENCE } && pairFu == 0 && wait == Wait.RYANMEN
 
-        val items = mutableListOf(FuItem("副底", 20))
+        val items = mutableListOf(FuItem("基本の20符（副底）", 20))
         if (isPinfu) {
             return if (ron) {
                 items += FuItem("門前ロン", 10)

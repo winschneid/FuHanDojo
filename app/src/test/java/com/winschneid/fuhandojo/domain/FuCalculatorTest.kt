@@ -47,7 +47,7 @@ class FuCalculatorTest {
     }
 
     @Test
-    fun `嵌張ロンは 20 + 門前ロン10 + 嵌張2 = 32 → 40符`() {
+    fun `カンチャンロンは 20 + 門前ロン10 + カンチャン2 = 32 → 40符`() {
         val result = fu(hand(m(2, 3, 4) + p(5, 6, 7) + s(7, 8, 9) + s(3, 5) + m(5, 5), s(4)[0], RON))
         assertEquals(Wait.KANCHAN, result.wait)
         assertEquals(32, result.raw)
@@ -56,7 +56,7 @@ class FuCalculatorTest {
     }
 
     @Test
-    fun `辺張は 12で3 と 89で7`() {
+    fun `ペンチャンは 12で3 と 89で7`() {
         assertEquals(Wait.PENCHAN, FuCalculator.waitOf(Meld(MeldKind.SEQUENCE, m(1)[0], false), m(3)[0]))
         assertEquals(Wait.PENCHAN, FuCalculator.waitOf(Meld(MeldKind.SEQUENCE, m(7)[0], false), m(7)[0]))
         assertEquals(Wait.RYANMEN, FuCalculator.waitOf(Meld(MeldKind.SEQUENCE, m(2)[0], false), m(2)[0]))
@@ -93,7 +93,7 @@ class FuCalculatorTest {
     }
 
     @Test
-    fun `双碰のロンで完成した刻子は明刻、ツモなら暗刻`() {
+    fun `シャンポンのロンで完成した刻子は明刻、ツモなら暗刻`() {
         val concealed = m(2, 3, 4) + m(6, 7, 8) + s(4, 5, 6) + p(9, 9) + s(2, 2)
         val ron = fu(hand(concealed, s(2)[0], RON))
         assertEquals(Wait.SHANPON, ron.wait)

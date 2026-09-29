@@ -22,7 +22,7 @@ object FuQuizGenerator {
 
     private const val MELD_GUIDE = "刻子: 明刻 2符 / 暗刻 4符\n槓子: 明槓 8符 / 暗槓 16符\nヤオ九牌（1・9・字牌）はそれぞれ2倍。順子は0符"
     private const val PAIR_GUIDE = "雀頭の符: 三元牌（白・發・中）、自風、場風は2符。それ以外は0符"
-    private const val WAIT_GUIDE = "待ちの符: 嵌張・辺張・単騎は2符。両面・双碰は0符"
+    private const val WAIT_GUIDE = "待ちの符: カンチャン・ペンチャン・単騎は2符。両面・シャンポンは0符"
     private const val PINFU_SHAPE = "平和の形（門前で順子だけ、役牌でない雀頭、両面待ち）"
 
     fun generate(level: QuizLevel, random: Random, count: Int): List<Question> = List(count) {
@@ -263,7 +263,7 @@ object FuQuizGenerator {
             result.isPinfu -> listOf("（${result.wait.label}待ちとして数える）")
             else -> listOf(
                 "（${result.wait.label}待ちとして数える）",
-                "ここにない順子・役牌でない雀頭・両面や双碰の待ちは0符",
+                "ここにない順子・役牌でない雀頭・両面やシャンポンの待ちは0符",
             )
         }
         return (lines + total + notes).joinToString("\n")

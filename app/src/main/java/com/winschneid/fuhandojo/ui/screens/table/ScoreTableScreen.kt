@@ -203,7 +203,7 @@ private fun FuHanTable(rows: List<ScoreTable.Row>) {
 private fun FuTab() {
     SectionTitle("数え方", top = 0.dp)
     Guide(
-        "1. 副底 20符から始める",
+        "1. 基本の20符（副底）から始める",
         "2. 和了り方・面子・雀頭・待ちの符を足す",
         "3. 10符単位に切り上げる（例: 32符 → 40符）",
     )
@@ -237,7 +237,7 @@ private fun FuTab() {
     }
     Guide(
         "ヤオ九牌は 1・9・字牌。",
-        "ロンで完成した刻子（双碰待ちでロン）は明刻として数える。",
+        "ロンで完成した刻子（シャンポン待ちでロン）は明刻として数える。",
     )
 
     SectionTitle("雀頭")
@@ -250,8 +250,8 @@ private fun FuTab() {
 
     SectionTitle("待ち")
     TableFrame {
-        TableRow { BodyCell("嵌張・辺張・単騎", 2f); BodyCell("2符", 1f, bold = true) }
-        TableRow { BodyCell("両面・双碰", 2f); BodyCell("0符", 1f) }
+        TableRow { BodyCell("カンチャン・ペンチャン・単騎", 2f); BodyCell("2符", 1f, bold = true) }
+        TableRow { BodyCell("両面・シャンポン", 2f); BodyCell("0符", 1f) }
     }
 
     SectionTitle("決まった符になる手")

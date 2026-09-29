@@ -24,7 +24,7 @@ enum class QuizLevel(val course: Course, val rank: String, val title: String, va
     TSUMO_ALL_FU(Course.POINTS, "2級", "ツモ 全符", "20符〜110符の子と親のツモ"),
     MIXED(Course.POINTS, "1級", "総合", "点数編の全範囲から出題"),
     MELD_FU(Course.FU, "初段", "面子の符", "明刻・暗刻・明槓・暗槓。ヤオ九牌は2倍"),
-    PAIR_WAIT_FU(Course.FU, "二段", "雀頭と待ちの符", "役牌の雀頭と、嵌張・辺張・単騎の待ち"),
+    PAIR_WAIT_FU(Course.FU, "二段", "雀頭と待ちの符", "役牌の雀頭と、カンチャン・ペンチャン・単騎の待ち"),
     FU_SUM(Course.FU, "三段", "符の足し算と例外", "部品の符を足して切り上げる。平和・七対子・鳴いた手の30符"),
     SPLIT_HAND_FU(Course.FU, "四段", "区切った手牌の符", "面子ごとに区切った手牌を見て符を数える"),
     HAND_FU_RON(Course.FU, "五段", "手牌の符（ロン）", "手牌を自分で面子に分けて符を数える"),
