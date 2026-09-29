@@ -2,8 +2,10 @@ package com.winschneid.fuhandojo.di
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.winschneid.fuhandojo.data.ProgressRepositoryImpl
 import com.winschneid.fuhandojo.domain.repository.ProgressRepository
@@ -27,6 +29,9 @@ abstract class AppModule {
         @Provides
         @Singleton
         fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
-            PreferenceDataStoreFactory.create { context.preferencesDataStoreFile("progress") }
+            PreferenceDataStoreFactory.create(
+                // ファイルが壊れていても起動できるよう、進捗を空にして読み直す
+                corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
+            ) { context.preferencesDataStoreFile("progress") }
     }
 }

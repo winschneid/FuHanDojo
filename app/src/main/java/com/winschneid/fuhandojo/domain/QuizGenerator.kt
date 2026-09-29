@@ -1,5 +1,6 @@
 package com.winschneid.fuhandojo.domain
 
+import com.winschneid.fuhandojo.domain.model.Course
 import com.winschneid.fuhandojo.domain.model.Hand
 import com.winschneid.fuhandojo.domain.model.Limit
 import com.winschneid.fuhandojo.domain.model.Payment
@@ -28,9 +29,10 @@ object QuizGenerator {
         random: Random = Random.Default,
         count: Int = QuizLevel.QUESTION_COUNT,
     ): List<Question> {
+        if (level.course == Course.FU) return FuQuizGenerator.generate(level, random, count)
         val picks = if (level == QuizLevel.MIXED) {
             // 範囲の広い級に偏らないよう、まず級を均等に選んでからその級の問題を選ぶ
-            sampleRounds(QuizLevel.entries - QuizLevel.MIXED, count, random) { 1 }
+            sampleRounds(MIXED_SOURCES, count, random) { 1 }
                 .map { from -> sampleRounds(itemsOf(from), 1, random, ::weightOf).single() to itemsOf(from) }
         } else {
             val items = itemsOf(level)
@@ -80,38 +82,43 @@ object QuizGenerator {
 
     private fun pointsQuestion(item: QuizItem.Points, pool: List<QuizItem>, random: Random): Question.Points {
         val hand = item.hand
+        val fallback = pool.filterIsInstance<QuizItem.Points>().map { it.hand }
+        val (choices, answerIndex) = pointsChoices(hand, item.showFu, fallback, random)
+        return Question.Points(
+            hand = hand,
+            showFu = item.showFu,
+            choices = choices,
+            answerIndex = answerIndex,
+            explanation = Explainer.explain(hand),
+        )
+    }
+
+    /**
+     * 点数を答える問題の選択肢。fallback は近い点数だけで足りないときに使う候補（書式が同じものだけ使う）
+     */
+    internal fun pointsChoices(hand: Hand, showFu: Boolean, fallback: List<Hand>, random: Random): Pair<List<String>, Int> {
         val answer = ScoreCalculator.payment(hand)
         val sameFormat = { other: Hand -> other.seat == hand.seat && other.method == hand.method }
 
         // 満貫の正解がいつも最小の選択肢にならないよう、満貫に届かない30符4翻（子ロンなら7700）を必ず混ぜる
-        val belowMangan = if (!item.showFu && Limit.ofHan(hand.han) == Limit.MANGAN) {
+        val belowMangan = if (!showFu && Limit.ofHan(hand.han) == Limit.MANGAN) {
             listOf(ScoreCalculator.payment(hand.copy(fu = 30, han = 4)))
         } else {
             emptyList()
         }
         // 間違えやすい近くの点数（翻・符がひとつ違い、親子の取り違え）を優先して選択肢にする
-        val near = neighborsOf(item).filter(ScoreCalculator::isValid).map(ScoreCalculator::payment)
-        val fallback = pool.filterIsInstance<QuizItem.Points>()
-            .map { it.hand }
-            .filter(sameFormat)
-            .map(ScoreCalculator::payment)
-        val distractors = (belowMangan + near.shuffled(random) + fallback.shuffled(random))
+        val near = neighborsOf(hand, showFu).filter(ScoreCalculator::isValid).map(ScoreCalculator::payment)
+        val sameFormatFallback = fallback.filter(sameFormat).map(ScoreCalculator::payment)
+        val distractors = (belowMangan + near.shuffled(random) + sameFormatFallback.shuffled(random))
             .distinctBy { it.label }
             .filter { it.label != answer.label }
             .take(CHOICE_COUNT - 1)
 
         val choices = (distractors + answer).sortedBy { it.total }
-        return Question.Points(
-            hand = hand,
-            showFu = item.showFu,
-            choices = choices.map { it.label },
-            answerIndex = choices.indexOf(answer),
-            explanation = Explainer.explain(hand),
-        )
+        return choices.map { it.label } to choices.indexOf(answer)
     }
 
-    private fun neighborsOf(item: QuizItem.Points): List<Hand> {
-        val hand = item.hand
+    private fun neighborsOf(hand: Hand, showFu: Boolean): List<Hand> {
         // ツモは親と子で書式（オール / 子-親）が違い一目で誤答とわかるので、親子の取り違えはロンだけ
         val otherSeat = listOfNotNull(
             if (hand.method == WinMethod.RON) {
@@ -120,7 +127,7 @@ object QuizGenerator {
                 null
             },
         )
-        if (!item.showFu) {
+        if (!showFu) {
             return LIMIT_HANS.map { hand.copy(han = it) } + otherSeat
         }
         val fuIndex = ScoreCalculator.FU_VALUES.indexOf(hand.fu)
@@ -134,6 +141,9 @@ object QuizGenerator {
     }
 
     private val LIMIT_HANS = 5..13
+
+    /** 1級（総合）の出題範囲。点数編のほかの級すべて */
+    private val MIXED_SOURCES = QuizLevel.entries.filter { it.course == Course.POINTS && it != QuizLevel.MIXED }
     private val SEATS = Seat.entries
 
     private fun limitHands(seats: List<Seat>, method: WinMethod) =
@@ -157,7 +167,9 @@ object QuizGenerator {
         QuizLevel.RON_ALL_FU -> fuHands(SEATS, WinMethod.RON, ScoreCalculator.FU_VALUES)
         QuizLevel.TSUMO_30_40 -> fuHands(SEATS, WinMethod.TSUMO, listOf(30, 40))
         QuizLevel.TSUMO_ALL_FU -> fuHands(SEATS, WinMethod.TSUMO, ScoreCalculator.FU_VALUES)
-        QuizLevel.MIXED -> (QuizLevel.entries - QuizLevel.MIXED).flatMap(::itemsOf)
+        QuizLevel.MIXED -> MIXED_SOURCES.flatMap(::itemsOf)
+        QuizLevel.MELD_FU, QuizLevel.PAIR_WAIT_FU, QuizLevel.HAND_FU_RON, QuizLevel.HAND_FU_TSUMO, QuizLevel.HAND_POINTS ->
+            error("$level は FuQuizGenerator で出題する")
     }
 }
 

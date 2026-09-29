@@ -80,8 +80,18 @@ fun HomeContent(
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
             }
-            items(uiState.levels, key = { it.level.name }) { item ->
-                LevelCard(item = item, onClick = { onStartLevel(item.level) })
+            uiState.levels.groupBy { it.level.course }.forEach { (course, levels) ->
+                item(key = course.name) {
+                    Text(
+                        text = course.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                }
+                items(levels, key = { it.level.name }) { item ->
+                    LevelCard(item = item, onClick = { onStartLevel(item.level) })
+                }
             }
         }
     }

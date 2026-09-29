@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -49,10 +50,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.winschneid.fuhandojo.domain.QuizGenerator
+import com.winschneid.fuhandojo.domain.model.Meld
 import com.winschneid.fuhandojo.domain.model.Question
 import com.winschneid.fuhandojo.domain.model.QuizLevel
 import com.winschneid.fuhandojo.domain.model.Seat
 import com.winschneid.fuhandojo.domain.model.WinMethod
+import com.winschneid.fuhandojo.ui.components.HandView
+import com.winschneid.fuhandojo.ui.components.MeldView
+import com.winschneid.fuhandojo.ui.components.TileGroup
 import com.winschneid.fuhandojo.ui.theme.FuHanDojoTheme
 import kotlin.random.Random
 
@@ -189,47 +194,129 @@ private fun QuestionSection(uiState: QuizUiState, onAction: (QuizAction) -> Unit
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Prompt(question: Question) {
-    when (question) {
-        is Question.LimitName -> Text(
-            text = "${question.han}翻は？",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        is Question.Points -> Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            val hand = question.hand
-            // 狭い画面や大きな文字設定でもはみ出さないよう折り返す
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Tag(hand.seat.label, emphasized = hand.seat == Seat.DEALER)
-                Tag(hand.method.label)
-                if (question.showFu) Tag("${hand.fu}符")
-                Tag("${hand.han}翻")
-            }
-            Text(
-                text = "何点？",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(top = 16.dp),
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        when (question) {
+            is Question.LimitName -> Text(
+                text = "${question.han}翻は？",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
             )
-            if (hand.method == WinMethod.TSUMO) {
+            is Question.Points -> {
+                val hand = question.hand
+                TagRow {
+                    Tag(hand.seat.label, emphasized = hand.seat == Seat.DEALER)
+                    Tag(hand.method.label)
+                    if (question.showFu) Tag("${hand.fu}符")
+                    Tag("${hand.han}翻")
+                }
+                Ask("何点？")
+                if (hand.method == WinMethod.TSUMO) TsumoHint(hand.seat)
+            }
+            is Question.MeldFu -> {
+                MeldView(question.meld, tileWidth = 48.dp, caption = null)
                 Text(
-                    text = if (hand.seat == Seat.DEALER) "子それぞれの支払い（〇〇オール）" else "子の支払い-親の支払い",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = "${question.meld.label}（${meldDescription(question.meld)}）",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = 12.dp),
                 )
+                Ask("この面子は何符？")
+            }
+            is Question.PairFu -> {
+                TagRow {
+                    Tag("${question.roundWind.label}場", small = true)
+                    Tag("${question.seatWind.label}家（自風）", small = true)
+                }
+                TileGroup(
+                    tiles = listOf(question.pair, question.pair),
+                    tileWidth = 48.dp,
+                    caption = "雀頭",
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+                Ask("この雀頭は何符？")
+            }
+            is Question.WaitFu -> {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TileGroup(question.shape, tileWidth = 44.dp, caption = "待ちの形")
+                    Text("＋", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(horizontal = 8.dp))
+                    TileGroup(listOf(question.winningTile), tileWidth = 44.dp, caption = "和了牌", highlightLast = true)
+                }
+                Ask("待ちの名前と符は？")
+            }
+            is Question.HandFu -> {
+                val hand = question.hand
+                TagRow {
+                    Tag("${hand.roundWind.label}場", small = true)
+                    Tag("${hand.seatWind.label}家", small = true, emphasized = hand.seat == Seat.DEALER)
+                    Tag(if (hand.isClosed) "門前" else "鳴きあり", small = true)
+                }
+                HandView(hand, modifier = Modifier.padding(top = 16.dp))
+                if (question.han != null) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 12.dp),
+                    ) {
+                        Tag("${question.han}翻")
+                        Text(
+                            text = "として（役とドラの合計）",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(start = 8.dp),
+                        )
+                    }
+                    Ask("何点？")
+                    if (hand.method == WinMethod.TSUMO) TsumoHint(hand.seat)
+                } else {
+                    Ask("何符？")
+                }
             }
         }
     }
 }
 
+private fun meldDescription(meld: Meld): String = when (meld.label) {
+    "チー" -> "鳴いた順子"
+    "順子" -> "鳴いていない"
+    "ポン" -> "鳴いた刻子＝明刻"
+    "暗刻" -> "手の中でそろえた刻子"
+    "明槓" -> "鳴いた槓子"
+    else -> "鳴かずに4枚そろえて槓した槓子"
+}
+
+/** 狭い画面や大きな文字設定でもはみ出さないよう折り返して並べる */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Tag(text: String, emphasized: Boolean = false) {
+private fun TagRow(content: @Composable () -> Unit) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        content()
+    }
+}
+
+@Composable
+private fun Ask(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.headlineSmall,
+        modifier = Modifier.padding(top = 16.dp),
+    )
+}
+
+@Composable
+private fun TsumoHint(seat: Seat) {
+    Text(
+        text = if (seat == Seat.DEALER) "子それぞれの支払い（〇〇オール）" else "子の支払い-親の支払い",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun Tag(text: String, emphasized: Boolean = false, small: Boolean = false) {
     Surface(
         shape = MaterialTheme.shapes.small,
         color = if (emphasized) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
@@ -237,9 +324,13 @@ private fun Tag(text: String, emphasized: Boolean = false) {
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.titleLarge,
+            style = if (small) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            modifier = if (small) {
+                Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+            } else {
+                Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+            },
         )
     }
 }

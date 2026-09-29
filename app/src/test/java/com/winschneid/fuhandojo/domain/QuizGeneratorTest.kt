@@ -1,5 +1,6 @@
 package com.winschneid.fuhandojo.domain
 
+import com.winschneid.fuhandojo.domain.model.Course
 import com.winschneid.fuhandojo.domain.model.Hand
 import com.winschneid.fuhandojo.domain.model.Limit
 import com.winschneid.fuhandojo.domain.model.Question
@@ -15,9 +16,9 @@ import kotlin.random.Random
 class QuizGeneratorTest {
 
     @Test
-    fun `どの級でも4つの異なる選択肢を持つ問題を10問作り、正解が点数計算と一致する`() {
+    fun `点数編のどの級でも4つの異なる選択肢を持つ問題を10問作り、正解が点数計算と一致する`() {
         repeat(50) { seed ->
-            QuizLevel.entries.forEach { level ->
+            QuizLevel.entries.filter { it.course == Course.POINTS }.forEach { level ->
                 val questions = QuizGenerator.generate(level, Random(seed))
                 assertEquals(QuizLevel.QUESTION_COUNT, questions.size)
                 questions.forEach { q ->
@@ -28,6 +29,7 @@ class QuizGeneratorTest {
                             assertTrue(ScoreCalculator.isValid(q.hand))
                             assertEquals(ScoreCalculator.payment(q.hand).label, q.answer)
                         }
+                        else -> error("点数編で想定外の問題: $q")
                     }
                 }
             }
