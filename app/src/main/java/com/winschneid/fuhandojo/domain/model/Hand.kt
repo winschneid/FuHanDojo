@@ -18,13 +18,16 @@ data class Hand(
     val han: Int,
 )
 
-/** 満貫以上の区分。basePoints は符に関係なく固定される基本点 */
-enum class Limit(val label: String, val basePoints: Int) {
-    MANGAN("満貫", 2000),
-    HANEMAN("跳満", 3000),
-    BAIMAN("倍満", 4000),
-    SANBAIMAN("三倍満", 6000),
-    YAKUMAN("役満", 8000),
+/**
+ * 満貫以上の区分。basePoints は符に関係なく固定される基本点。
+ * minHan と hanRange は翻数だけで決まる範囲（満貫は4翻以下でも符によってなる）。
+ */
+enum class Limit(val label: String, val basePoints: Int, val minHan: Int, val hanRange: String) {
+    MANGAN("満貫", 2000, 5, "5翻"),
+    HANEMAN("跳満", 3000, 6, "6〜7翻"),
+    BAIMAN("倍満", 4000, 8, "8〜10翻"),
+    SANBAIMAN("三倍満", 6000, 11, "11〜12翻"),
+    YAKUMAN("役満", 8000, 13, "13翻〜"),
     ;
 
     companion object {

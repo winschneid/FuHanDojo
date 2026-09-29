@@ -10,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.winschneid.fuhandojo.ui.screens.home.HomeScreen
 import com.winschneid.fuhandojo.ui.screens.quiz.QuizScreen
+import com.winschneid.fuhandojo.ui.screens.table.ScoreTableScreen
 
 /**
  * 遷移中（前面にない間）の操作は無視する。
@@ -27,6 +28,9 @@ fun NavGraph() {
                 onStartLevel = { level ->
                     if (entry.isResumed()) navController.navigate(Routes.Quiz.createRoute(level))
                 },
+                onOpenScoreTable = {
+                    if (entry.isResumed()) navController.navigate(Routes.ScoreTable.route)
+                },
             )
         }
         composable(
@@ -43,6 +47,13 @@ fun NavGraph() {
                             popUpTo(Routes.Home.route)
                         }
                     }
+                },
+            )
+        }
+        composable(Routes.ScoreTable.route) { entry ->
+            ScoreTableScreen(
+                onNavigateBack = {
+                    if (entry.isResumed()) navController.popBackStack()
                 },
             )
         }

@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,10 +42,11 @@ import com.winschneid.fuhandojo.ui.theme.FuHanDojoTheme
 @Composable
 fun HomeScreen(
     onStartLevel: (QuizLevel) -> Unit,
+    onOpenScoreTable: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    HomeContent(uiState = uiState, onStartLevel = onStartLevel)
+    HomeContent(uiState = uiState, onStartLevel = onStartLevel, onOpenScoreTable = onOpenScoreTable)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,9 +54,17 @@ fun HomeScreen(
 fun HomeContent(
     uiState: HomeUiState,
     onStartLevel: (QuizLevel) -> Unit,
+    onOpenScoreTable: () -> Unit,
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("符ハン道場") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("符ハン道場") },
+                actions = {
+                    TextButton(onClick = onOpenScoreTable) { Text("早見表") }
+                },
+            )
+        },
     ) { paddingValues ->
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
@@ -165,6 +175,7 @@ private fun HomeContentPreview() {
                 isLoading = false,
             ),
             onStartLevel = {},
+            onOpenScoreTable = {},
         )
     }
 }

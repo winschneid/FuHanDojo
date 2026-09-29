@@ -8,4 +8,5 @@ sealed class Routes(val route: String) {
         const val ARG_LEVEL = "level"
         fun createRoute(level: QuizLevel) = "quiz/${level.name}"
     }
+    data object ScoreTable : Routes("score_table")
 }
