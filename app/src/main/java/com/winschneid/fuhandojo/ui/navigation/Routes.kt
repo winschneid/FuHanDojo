@@ -9,4 +9,5 @@ sealed class Routes(val route: String) {
         fun createRoute(level: QuizLevel) = "quiz/${level.name}"
     }
     data object ScoreTable : Routes("score_table")
+    data object Review : Routes("review")
 }

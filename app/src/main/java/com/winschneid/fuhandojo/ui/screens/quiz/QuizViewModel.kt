@@ -7,6 +7,7 @@ import com.winschneid.fuhandojo.domain.QuizGenerator
 import com.winschneid.fuhandojo.domain.model.Question
 import com.winschneid.fuhandojo.domain.model.QuizLevel
 import com.winschneid.fuhandojo.domain.repository.ProgressRepository
+import com.winschneid.fuhandojo.domain.repository.ReviewRepository
 import com.winschneid.fuhandojo.ui.navigation.Routes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,6 +42,7 @@ sealed interface QuizAction {
 class QuizViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val progressRepository: ProgressRepository,
+    private val reviewRepository: ReviewRepository,
 ) : ViewModel() {
 
     private val level = QuizLevel.valueOf(checkNotNull(savedStateHandle[Routes.Quiz.ARG_LEVEL]))
@@ -55,6 +57,11 @@ class QuizViewModel @Inject constructor(
             is QuizAction.Select -> {
                 if (state.finished || state.selectedIndex != null) return
                 val correct = action.choiceIndex == state.current.answerIndex
+                // 途中でやめても残るよう、間違えたその場で復習リストに加える
+                if (!correct) {
+                    val question = state.current
+                    viewModelScope.launch { reviewRepository.addMistake(level, question) }
+                }
                 setState(
                     state.copy(
                         selectedIndex = action.choiceIndex,

@@ -112,23 +112,43 @@ fun QuizContent(
                     onStartLevel = onStartLevel,
                 )
             } else {
-                QuestionSection(uiState = uiState, onAction = onAction)
+                QuestionSection(
+                    question = uiState.current,
+                    index = uiState.index,
+                    total = uiState.questions.size,
+                    selectedIndex = uiState.selectedIndex,
+                    isLast = uiState.isLast,
+                    onSelect = { onAction(QuizAction.Select(it)) },
+                    onNext = { onAction(QuizAction.Next) },
+                )
             }
         }
     }
 }
 
+/**
+ * 問題1問の表示と回答。級・段のクイズと復習で共通。
+ * header は問題の上に添える小さな見出し（復習でどの級の問題かを示す）。
+ */
 @Composable
-private fun QuestionSection(uiState: QuizUiState, onAction: (QuizAction) -> Unit) {
-    val question = uiState.current
-    val answered = uiState.selectedIndex != null
+internal fun QuestionSection(
+    question: Question,
+    index: Int,
+    total: Int,
+    selectedIndex: Int?,
+    isLast: Boolean,
+    onSelect: (Int) -> Unit,
+    onNext: () -> Unit,
+    header: String? = null,
+) {
+    val answered = selectedIndex != null
 
     Text(
-        text = "${uiState.index + 1} / ${uiState.questions.size}",
+        text = if (header != null) "${index + 1} / $total　$header" else "${index + 1} / $total",
         style = MaterialTheme.typography.labelLarge,
     )
     LinearProgressIndicator(
-        progress = { (uiState.index + if (answered) 1 else 0).toFloat() / uiState.questions.size },
+        progress = { (index + if (answered) 1 else 0).toFloat() / total },
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 4.dp, bottom = 24.dp),
@@ -144,16 +164,16 @@ private fun QuestionSection(uiState: QuizUiState, onAction: (QuizAction) -> Unit
                 state = when {
                     !answered -> ChoiceState.Idle
                     i == question.answerIndex -> ChoiceState.Correct
-                    i == uiState.selectedIndex -> ChoiceState.Wrong
+                    i == selectedIndex -> ChoiceState.Wrong
                     else -> ChoiceState.Other
                 },
-                onClick = { onAction(QuizAction.Select(i)) },
+                onClick = { onSelect(i) },
             )
         }
     }
 
     if (answered) {
-        val correct = uiState.selectedIndex == question.answerIndex
+        val correct = selectedIndex == question.answerIndex
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -182,12 +202,12 @@ private fun QuestionSection(uiState: QuizUiState, onAction: (QuizAction) -> Unit
             }
         }
         Button(
-            onClick = { onAction(QuizAction.Next) },
+            onClick = onNext,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp),
         ) {
-            Text(if (uiState.isLast) "結果を見る" else "次へ")
+            Text(if (isLast) "結果を見る" else "次へ")
         }
     }
 }

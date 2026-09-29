@@ -10,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.winschneid.fuhandojo.ui.screens.home.HomeScreen
 import com.winschneid.fuhandojo.ui.screens.quiz.QuizScreen
+import com.winschneid.fuhandojo.ui.screens.review.ReviewScreen
 import com.winschneid.fuhandojo.ui.screens.table.ScoreTableScreen
 
 /**
@@ -30,6 +31,9 @@ fun NavGraph() {
                 },
                 onOpenScoreTable = {
                     if (entry.isResumed()) navController.navigate(Routes.ScoreTable.route)
+                },
+                onStartReview = {
+                    if (entry.isResumed()) navController.navigate(Routes.Review.route)
                 },
             )
         }
@@ -52,6 +56,13 @@ fun NavGraph() {
         }
         composable(Routes.ScoreTable.route) { entry ->
             ScoreTableScreen(
+                onNavigateBack = {
+                    if (entry.isResumed()) navController.popBackStack()
+                },
+            )
+        }
+        composable(Routes.Review.route) { entry ->
+            ReviewScreen(
                 onNavigateBack = {
                     if (entry.isResumed()) navController.popBackStack()
                 },

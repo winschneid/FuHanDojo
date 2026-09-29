@@ -39,6 +39,12 @@
 門前の手はリーチしている前提、鳴いた手は役牌かタンヤオで役がある手だけを出します。
 連風牌の雀頭（2符か4符かルールで分かれる）は出題しません。
 
+### 復習
+
+級・段のクイズで間違えた問題は、その場で復習リストに保存されます。ホームの「復習」から最大10問ずつ解き直せます。
+12時間以上あけて2回続けて正解すると、覚えた問題としてリストから外れます（間違えると回数は0に戻ります）。
+直後にもう一度正解しても覚えたとは言えないので、時間をおいて思い出せたときだけ数えます。
+
 ### 早見表
 
 ホーム右上の「早見表」から、点数表（子/親・ロン/ツモ、満貫以上）と符の数え方をいつでも見られます。
@@ -48,11 +54,12 @@
 ## 構成
 
 - Kotlin / Jetpack Compose / Material 3
-- Hilt（DI）、DataStore（級ごとの最高正解数を保存）
+- Hilt（DI）、DataStore（級ごとの最高正解数と復習リストを保存）、kotlinx.serialization（復習リストの JSON 化）
 - `domain/ScoreCalculator.kt` 点数計算、`domain/QuizGenerator.kt` 点数編の出題と解説
 - `domain/FuCalculator.kt` 符計算、`domain/FuQuizGenerator.kt` 符計算編の出題と手牌の生成
 - `domain/ScoreTable.kt` 早見表のデータ（クイズと同じ計算から作る）
 - `ui/components/Tiles.kt` 牌の描画
+- `domain/Review.kt` 復習リストの追加・卒業・出題順の規則
 
 ## ビルドとテスト
 

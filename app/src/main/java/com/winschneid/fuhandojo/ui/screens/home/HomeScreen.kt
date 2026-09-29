@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -36,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.winschneid.fuhandojo.domain.ReviewList
 import com.winschneid.fuhandojo.domain.model.QuizLevel
 import com.winschneid.fuhandojo.ui.theme.FuHanDojoTheme
 
@@ -43,10 +45,16 @@ import com.winschneid.fuhandojo.ui.theme.FuHanDojoTheme
 fun HomeScreen(
     onStartLevel: (QuizLevel) -> Unit,
     onOpenScoreTable: () -> Unit,
+    onStartReview: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    HomeContent(uiState = uiState, onStartLevel = onStartLevel, onOpenScoreTable = onOpenScoreTable)
+    HomeContent(
+        uiState = uiState,
+        onStartLevel = onStartLevel,
+        onOpenScoreTable = onOpenScoreTable,
+        onStartReview = onStartReview,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,6 +63,7 @@ fun HomeContent(
     uiState: HomeUiState,
     onStartLevel: (QuizLevel) -> Unit,
     onOpenScoreTable: () -> Unit,
+    onStartReview: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -89,6 +98,9 @@ fun HomeContent(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
+            }
+            item(key = "review") {
+                ReviewCard(count = uiState.reviewCount, onClick = onStartReview)
             }
             uiState.levels.groupBy { it.level.course }.forEach { (course, levels) ->
                 item(key = course.name) {
@@ -172,10 +184,48 @@ private fun HomeContentPreview() {
         HomeContent(
             uiState = HomeUiState(
                 levels = levelItemsOf(mapOf(QuizLevel.LIMIT_NAMES to 10, QuizLevel.NON_DEALER_LIMIT_RON to 6)),
+                reviewCount = 3,
                 isLoading = false,
             ),
             onStartLevel = {},
             onOpenScoreTable = {},
+            onStartReview = {},
         )
+    }
+}
+
+@Composable
+private fun ReviewCard(count: Int, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = if (count > 0) "復習 ${count}問" else "復習",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = if (count > 0) {
+                        "間違えた問題を解き直す。時間をおいて${ReviewList.REVIEW_STREAK_TO_CLEAR}回続けて正解すると覚えた問題になります"
+                    } else {
+                        "間違えた問題はここにたまります"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            Button(
+                onClick = onClick,
+                enabled = count > 0,
+                modifier = Modifier.padding(start = 12.dp),
+            ) {
+                Text("復習する")
+            }
+        }
     }
 }

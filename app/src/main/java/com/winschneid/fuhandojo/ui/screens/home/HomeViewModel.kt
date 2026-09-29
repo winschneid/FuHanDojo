@@ -4,9 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.winschneid.fuhandojo.domain.model.QuizLevel
 import com.winschneid.fuhandojo.domain.repository.ProgressRepository
+import com.winschneid.fuhandojo.domain.repository.ReviewRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
@@ -20,16 +21,19 @@ data class LevelItem(
 
 data class HomeUiState(
     val levels: List<LevelItem> = emptyList(),
+    /** 復習リストにある問題の数 */
+    val reviewCount: Int = 0,
     val isLoading: Boolean = true,
 )
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     progressRepository: ProgressRepository,
+    reviewRepository: ReviewRepository,
 ) : ViewModel() {
 
-    val uiState = progressRepository.bestScores().map { bestScores ->
-        HomeUiState(levels = levelItemsOf(bestScores), isLoading = false)
+    val uiState = combine(progressRepository.bestScores(), reviewRepository.items()) { bestScores, reviewItems ->
+        HomeUiState(levels = levelItemsOf(bestScores), reviewCount = reviewItems.size, isLoading = false)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),

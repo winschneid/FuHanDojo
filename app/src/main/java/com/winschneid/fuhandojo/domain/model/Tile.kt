@@ -1,5 +1,7 @@
 package com.winschneid.fuhandojo.domain.model
 
+import kotlinx.serialization.Serializable
+
 enum class Suit(val label: String) {
     MAN("萬"),
     PIN("筒"),
@@ -10,6 +12,7 @@ enum class Suit(val label: String) {
 /**
  * 麻雀牌。字牌の number は 1〜7 が 東・南・西・北・白・發・中。
  */
+@Serializable
 data class Tile(val suit: Suit, val number: Int) : Comparable<Tile> {
 
     init {
@@ -61,6 +64,7 @@ enum class MeldKind { SEQUENCE, TRIPLET, QUAD }
  * 面子。tile は順子なら一番小さい牌、刻子・槓子ならその牌。
  * open は鳴いた（ポン・チー・明槓）かどうか。暗槓は open = false で手の外に出ている。
  */
+@Serializable
 data class Meld(val kind: MeldKind, val tile: Tile, val open: Boolean) {
 
     init {
@@ -106,6 +110,7 @@ enum class Wait(val label: String, val fu: Int) {
  * 和了った手。
  * concealed は手の中の牌（和了牌を除く）、calledMelds は鳴いた面子と暗槓。
  */
+@Serializable
 data class WinningHand(
     val concealed: List<Tile>,
     val calledMelds: List<Meld>,

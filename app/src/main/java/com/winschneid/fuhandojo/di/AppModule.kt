@@ -8,7 +8,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.winschneid.fuhandojo.data.ProgressRepositoryImpl
+import com.winschneid.fuhandojo.data.ReviewRepositoryImpl
 import com.winschneid.fuhandojo.domain.repository.ProgressRepository
+import com.winschneid.fuhandojo.domain.repository.ReviewRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -24,6 +26,10 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindProgressRepository(impl: ProgressRepositoryImpl): ProgressRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindReviewRepository(impl: ReviewRepositoryImpl): ReviewRepository
 
     companion object {
         @Provides

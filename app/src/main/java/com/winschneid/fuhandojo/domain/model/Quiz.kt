@@ -1,5 +1,8 @@
 package com.winschneid.fuhandojo.domain.model
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
 enum class Course(val title: String) {
     POINTS("点数編"),
     FU("符計算編"),
@@ -45,6 +48,7 @@ enum class QuizLevel(val course: Course, val rank: String, val title: String, va
  * 区切った手牌の1グループ（面子・雀頭・七対子の対子）。
  * winning は和了牌で完成したグループ、caption は下に添える説明（鳴いた面子の種類など）。
  */
+@Serializable
 data class TileGroupInfo(
     val tiles: List<Tile>,
     val winning: Boolean,
@@ -52,7 +56,8 @@ data class TileGroupInfo(
     val faceDownEnds: Boolean = false,
 )
 
-/** 択一問題 */
+/** 択一問題。復習のために JSON で保存するので、クラス名を変えるときは SerialName を残す */
+@Serializable
 sealed interface Question {
     val choices: List<String>
     val answerIndex: Int
@@ -61,6 +66,8 @@ sealed interface Question {
     val answer: String get() = choices[answerIndex]
 
     /** 翻数から満貫・跳満などの名前を答える */
+    @Serializable
+    @SerialName("LimitName")
     data class LimitName(
         val han: Int,
         override val choices: List<String>,
@@ -69,6 +76,8 @@ sealed interface Question {
     ) : Question
 
     /** 和了の条件から点数を答える。showFu が false のときは満貫以上で符を問わない */
+    @Serializable
+    @SerialName("Points")
     data class Points(
         val hand: Hand,
         val showFu: Boolean,
@@ -78,6 +87,8 @@ sealed interface Question {
     ) : Question
 
     /** 面子1つの符を答える */
+    @Serializable
+    @SerialName("MeldFu")
     data class MeldFu(
         val meld: Meld,
         override val choices: List<String>,
@@ -86,6 +97,8 @@ sealed interface Question {
     ) : Question
 
     /** 雀頭の符を答える */
+    @Serializable
+    @SerialName("PairFu")
     data class PairFu(
         val pair: Tile,
         val roundWind: Wind,
@@ -96,6 +109,8 @@ sealed interface Question {
     ) : Question
 
     /** 待ちの形と符を答える。shape は和了牌を除いた待ちの部分 */
+    @Serializable
+    @SerialName("WaitFu")
     data class WaitFu(
         val shape: List<Tile>,
         val winningTile: Tile,
@@ -108,6 +123,8 @@ sealed interface Question {
      * 牌を見せずに、和了の条件と面子・雀頭・待ちを文字で示して、合計の符を答える。
      * 部品ごとの符の足し算と切り上げ、平和・七対子などの例外を練習する。
      */
+    @Serializable
+    @SerialName("FuSum")
     data class FuSum(
         /** 条件の元になった手（画面には出さない） */
         val hand: WinningHand,
@@ -122,6 +139,8 @@ sealed interface Question {
      * 役の判定はアプリで網羅していないので、翻の内訳は見せず条件として与える。
      * groups があるときは、手牌を面子・雀頭ごとに区切って見せる。
      */
+    @Serializable
+    @SerialName("HandFu")
     data class HandFu(
         val hand: WinningHand,
         val han: Int?,

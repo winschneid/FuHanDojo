@@ -1,5 +1,7 @@
 package com.winschneid.fuhandojo.domain.model
 
+import kotlinx.serialization.Serializable
+
 enum class Seat(val label: String) {
     NON_DEALER("子"),
     DEALER("親"),
@@ -11,6 +13,7 @@ enum class WinMethod(val label: String) {
 }
 
 /** 点数を決める和了の条件（誰が・どう和了ったか・符・翻） */
+@Serializable
 data class Hand(
     val seat: Seat,
     val method: WinMethod,
