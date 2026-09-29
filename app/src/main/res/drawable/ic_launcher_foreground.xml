@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 一筒の牌 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 牌の厚み -->
+    <path
+        android:fillColor="#C9A227"
+        android:pathData="M40,33h28a5,5 0,0 1,5 5v37a5,5 0,0 1,-5 5h-28a5,5 0,0 1,-5 -5v-37a5,5 0,0 1,5 -5z" />
+    <!-- 牌の表面 -->
+    <path
+        android:fillColor="#FAF7EE"
+        android:pathData="M40,28h28a5,5 0,0 1,5 5v37a5,5 0,0 1,-5 5h-28a5,5 0,0 1,-5 -5v-37a5,5 0,0 1,5 -5z" />
+    <path
+        android:fillColor="#9C2B32"
+        android:pathData="M54,51.5m-13,0a13,13 0,1 1,26 0a13,13 0,1 1,-26 0" />
+    <path
+        android:fillColor="#FAF7EE"
+        android:pathData="M54,51.5m-8,0a8,8 0,1 1,16 0a8,8 0,1 1,-16 0" />
+    <path
+        android:fillColor="#1B6B4A"
+        android:pathData="M54,51.5m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0" />
+</vector>
