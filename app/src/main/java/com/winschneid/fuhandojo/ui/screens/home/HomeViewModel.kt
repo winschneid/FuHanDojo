@@ -37,10 +37,10 @@ class HomeViewModel @Inject constructor(
     )
 }
 
-/** 最初の級と、ひとつ前の級に合格した級だけ挑戦できる */
+/** 編ごとに、最初の級・段と、ひとつ前に合格した級・段だけ挑戦できる */
 internal fun levelItemsOf(bestScores: Map<QuizLevel, Int>): List<LevelItem> =
     QuizLevel.entries.map { level ->
-        val previous = QuizLevel.entries.getOrNull(level.ordinal - 1)
+        val previous = level.previous()
         LevelItem(
             level = level,
             bestScore = bestScores[level],

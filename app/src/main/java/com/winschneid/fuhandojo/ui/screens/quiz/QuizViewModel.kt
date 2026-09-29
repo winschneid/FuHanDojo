@@ -28,7 +28,7 @@ data class QuizUiState(
     val current: Question get() = questions[index]
     val isLast: Boolean get() = index == questions.lastIndex
     val passed: Boolean get() = correctCount >= QuizLevel.PASS_SCORE
-    val nextLevel: QuizLevel? get() = QuizLevel.entries.getOrNull(level.ordinal + 1)
+    val nextLevel: QuizLevel? get() = level.next()
 }
 
 sealed interface QuizAction {

@@ -35,9 +35,28 @@ class FuQuizGeneratorTest {
                             }
                             assertTrue("$q", q.answer.startsWith(wait.label) && q.answer.endsWith("${wait.fu}符"))
                         }
+                        is Question.FuSum -> {
+                            assertTrue("$q", FuQuizGenerator.isUsable(q.hand))
+                            val result = FuCalculator.calculate(q.hand)!!
+                            assertEquals("${result.fu}符", q.answer)
+                            // 牌を見せないので、面子4つ・雀頭・待ち（七対子なら「七対子」）が文字で示されている
+                            if (result.isChiitoitsu) {
+                                assertTrue("$q", "七対子" in q.conditions)
+                            } else {
+                                assertEquals("$q", 2 + 4 + 2, q.conditions.size)
+                                // 数字を含む部品の説明に、符の数字そのものは書かない
+                                assertTrue("$q", q.conditions.none { "符" in it })
+                            }
+                        }
                         is Question.HandFu -> {
                             assertTrue("$q", FuQuizGenerator.isUsable(q.hand))
                             val result = FuCalculator.calculate(q.hand)!!
+                            q.groups?.let { groups ->
+                                // 区切っても牌はそのまま、和了牌で完成したグループがちょうど1つ
+                                assertEquals("$q", q.hand.allTiles.sorted(), groups.flatMap { it.tiles }.sorted())
+                                val winning = groups.single { it.winning }
+                                assertTrue("$q", q.hand.winningTile in winning.tiles)
+                            }
                             if (q.asksPoints) {
                                 val hand = Hand(q.hand.seat, q.hand.method, result.fu, q.han!!)
                                 assertTrue("$q", ScoreCalculator.isValid(hand))

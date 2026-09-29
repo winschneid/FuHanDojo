@@ -84,7 +84,7 @@ fun HomeContent(
         ) {
             item {
                 Text(
-                    text = "${QuizLevel.QUESTION_COUNT}問中${QuizLevel.PASS_SCORE}問正解で合格。合格すると次の級に挑戦できます。",
+                    text = "${QuizLevel.QUESTION_COUNT}問中${QuizLevel.PASS_SCORE}問正解で合格。合格すると次の級・段に挑戦できます。点数編と符計算編は、どちらからでも始められます。",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp),

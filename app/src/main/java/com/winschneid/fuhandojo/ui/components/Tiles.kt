@@ -33,6 +33,7 @@ import com.winschneid.fuhandojo.domain.model.Meld
 import com.winschneid.fuhandojo.domain.model.MeldKind
 import com.winschneid.fuhandojo.domain.model.Suit
 import com.winschneid.fuhandojo.domain.model.Tile
+import com.winschneid.fuhandojo.domain.model.TileGroupInfo
 import com.winschneid.fuhandojo.domain.model.WinMethod
 import com.winschneid.fuhandojo.domain.model.WinningHand
 import com.winschneid.fuhandojo.domain.model.Wind
@@ -123,6 +124,7 @@ fun TileGroup(
     modifier: Modifier = Modifier,
     caption: String? = null,
     highlightLast: Boolean = false,
+    highlightIndex: Int? = null,
     faceDownIndices: Set<Int> = emptySet(),
 ) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -131,7 +133,7 @@ fun TileGroup(
                 TileView(
                     tile = tile,
                     width = tileWidth,
-                    highlighted = highlightLast && i == tiles.lastIndex,
+                    highlighted = (highlightLast && i == tiles.lastIndex) || i == highlightIndex,
                     faceDown = i in faceDownIndices,
                 )
             }
@@ -184,6 +186,35 @@ fun HandView(hand: WinningHand, modifier: Modifier = Modifier) {
             )
             hand.calledMelds.forEach { meld ->
                 MeldView(meld, tileWidth, caption = meld.label)
+            }
+        }
+    }
+}
+
+/**
+ * 面子・雀頭ごとに区切った手牌。和了牌で完成したグループでは和了牌の枠を強調する。
+ * 区切りの分だけ横幅を使うので、牌を小さくしすぎず、入り切らなければ折り返す。
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun SplitHandView(groups: List<TileGroupInfo>, winningTile: Tile, modifier: Modifier = Modifier) {
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val tileCount = groups.sumOf { it.tiles.size }
+        val tileWidth = ((maxWidth - GROUP_GAP * groups.size - 1.dp * tileCount) / tileCount)
+            .coerceIn(22.dp, 34.dp)
+        FlowRow(
+            modifier = Modifier.semantics(mergeDescendants = true) {},
+            horizontalArrangement = Arrangement.spacedBy(GROUP_GAP, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            groups.forEach { group ->
+                TileGroup(
+                    tiles = group.tiles,
+                    tileWidth = tileWidth,
+                    caption = group.caption,
+                    highlightIndex = if (group.winning) group.tiles.lastIndexOf(winningTile) else null,
+                    faceDownIndices = if (group.faceDownEnds) setOf(0, group.tiles.lastIndex) else emptySet(),
+                )
             }
         }
     }

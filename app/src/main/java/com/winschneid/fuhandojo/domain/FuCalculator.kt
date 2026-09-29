@@ -26,6 +26,8 @@ data class FuResult(
     val melds: List<Meld>,
     val pair: Tile?,
     val wait: Wait,
+    /** 和了牌で完成した面子の melds での位置。雀頭（単騎）や七対子なら null */
+    val winningMeldIndex: Int? = null,
 )
 
 object FuCalculator {
@@ -88,10 +90,10 @@ object FuCalculator {
         if (isPinfu) {
             return if (ron) {
                 items += FuItem("門前ロン", 10)
-                FuResult(items, 30, 30, isPinfu = true, isChiitoitsu = false, melds, pair, wait)
+                FuResult(items, 30, 30, isPinfu = true, isChiitoitsu = false, melds, pair, wait, winningSet)
             } else {
                 items += FuItem("平和ツモ（ツモの2符は付かない）", 0)
-                FuResult(items, 20, 20, isPinfu = true, isChiitoitsu = false, melds, pair, wait)
+                FuResult(items, 20, 20, isPinfu = true, isChiitoitsu = false, melds, pair, wait, winningSet)
             }
         }
         if (hand.isClosed && ron) items += FuItem("門前ロン", 10)
@@ -111,7 +113,7 @@ object FuCalculator {
         val raw = items.sumOf { it.fu }
         // 鳴いた手で副底しかないロンは、20符ではなく30符として扱う
         val fu = if (!hand.isClosed && ron && raw == 20) 30 else roundUp10(raw)
-        return FuResult(items, raw, fu, isPinfu = false, isChiitoitsu = false, melds, pair, wait)
+        return FuResult(items, raw, fu, isPinfu = false, isChiitoitsu = false, melds, pair, wait, winningSet)
     }
 
     private fun chiitoitsu(hand: WinningHand) = FuResult(

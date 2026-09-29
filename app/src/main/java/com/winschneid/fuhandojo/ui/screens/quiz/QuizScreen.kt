@@ -57,6 +57,7 @@ import com.winschneid.fuhandojo.domain.model.Seat
 import com.winschneid.fuhandojo.domain.model.WinMethod
 import com.winschneid.fuhandojo.ui.components.HandView
 import com.winschneid.fuhandojo.ui.components.MeldView
+import com.winschneid.fuhandojo.ui.components.SplitHandView
 import com.winschneid.fuhandojo.ui.components.TileGroup
 import com.winschneid.fuhandojo.ui.theme.FuHanDojoTheme
 import kotlin.random.Random
@@ -246,6 +247,24 @@ private fun Prompt(question: Question) {
                 }
                 Ask("待ちの名前と符は？")
             }
+            is Question.FuSum -> {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        question.conditions.forEach { condition ->
+                            Text("・$condition", style = MaterialTheme.typography.titleMedium)
+                        }
+                    }
+                }
+                Ask("合計は何符？")
+                Text(
+                    text = "副底20符から足して、10符単位に切り上げる",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             is Question.HandFu -> {
                 val hand = question.hand
                 TagRow {
@@ -253,7 +272,12 @@ private fun Prompt(question: Question) {
                     Tag("${hand.seatWind.label}家", small = true, emphasized = hand.seat == Seat.DEALER)
                     Tag(if (hand.isClosed) "門前" else "鳴きあり", small = true)
                 }
-                HandView(hand, modifier = Modifier.padding(top = 16.dp))
+                val groups = question.groups
+                if (groups != null) {
+                    SplitHandView(groups, hand.winningTile, modifier = Modifier.padding(top = 16.dp))
+                } else {
+                    HandView(hand, modifier = Modifier.padding(top = 16.dp))
+                }
                 if (question.han != null) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -423,7 +447,7 @@ private fun ResultSection(
             text = when {
                 !uiState.passed -> "${QuizLevel.PASS_SCORE}問以上正解で合格です。解説を見ながらもう一度挑戦しましょう。"
                 nextLevel != null -> "${nextLevel.rank}「${nextLevel.title}」に挑戦できるようになりました。"
-                else -> "すべての級に合格しました。おめでとうございます！"
+                else -> "${uiState.level.course.title}にすべて合格しました。おめでとうございます！"
             },
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,

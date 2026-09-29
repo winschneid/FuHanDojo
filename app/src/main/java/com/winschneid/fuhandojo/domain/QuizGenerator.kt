@@ -168,7 +168,8 @@ object QuizGenerator {
         QuizLevel.TSUMO_30_40 -> fuHands(SEATS, WinMethod.TSUMO, listOf(30, 40))
         QuizLevel.TSUMO_ALL_FU -> fuHands(SEATS, WinMethod.TSUMO, ScoreCalculator.FU_VALUES)
         QuizLevel.MIXED -> MIXED_SOURCES.flatMap(::itemsOf)
-        QuizLevel.MELD_FU, QuizLevel.PAIR_WAIT_FU, QuizLevel.HAND_FU_RON, QuizLevel.HAND_FU_TSUMO, QuizLevel.HAND_POINTS ->
+        QuizLevel.MELD_FU, QuizLevel.PAIR_WAIT_FU, QuizLevel.FU_SUM, QuizLevel.SPLIT_HAND_FU,
+        QuizLevel.HAND_FU_RON, QuizLevel.HAND_FU_TSUMO, QuizLevel.HAND_POINTS ->
             error("$level は FuQuizGenerator で出題する")
     }
 }

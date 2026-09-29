@@ -7,6 +7,7 @@ import com.winschneid.fuhandojo.domain.model.Question
 import com.winschneid.fuhandojo.domain.model.QuizLevel
 import com.winschneid.fuhandojo.domain.model.Suit
 import com.winschneid.fuhandojo.domain.model.Tile
+import com.winschneid.fuhandojo.domain.model.TileGroupInfo
 import com.winschneid.fuhandojo.domain.model.Wait
 import com.winschneid.fuhandojo.domain.model.WinMethod
 import com.winschneid.fuhandojo.domain.model.WinningHand
@@ -22,11 +23,15 @@ object FuQuizGenerator {
     private const val MELD_GUIDE = "刻子: 明刻 2符 / 暗刻 4符\n槓子: 明槓 8符 / 暗槓 16符\nヤオ九牌（1・9・字牌）はそれぞれ2倍。順子は0符"
     private const val PAIR_GUIDE = "雀頭の符: 三元牌（白・發・中）、自風、場風は2符。それ以外は0符"
     private const val WAIT_GUIDE = "待ちの符: 嵌張・辺張・単騎は2符。両面・双碰は0符"
+    private const val PINFU_SHAPE = "平和の形（門前で順子だけ、役牌でない雀頭、両面待ち）"
 
     fun generate(level: QuizLevel, random: Random, count: Int): List<Question> = List(count) {
         when (level) {
             QuizLevel.MELD_FU -> meldQuestion(random)
             QuizLevel.PAIR_WAIT_FU -> if (random.nextBoolean()) pairQuestion(random) else waitQuestion(random)
+            QuizLevel.FU_SUM -> fuSumQuestion(randomHand(random, null, allowChiitoitsu = true), random)
+            QuizLevel.SPLIT_HAND_FU ->
+                handFuQuestion(randomHand(random, null, allowChiitoitsu = true), random, split = true)
             QuizLevel.HAND_FU_RON -> handFuQuestion(randomHand(random, WinMethod.RON, allowChiitoitsu = false), random)
             QuizLevel.HAND_FU_TSUMO -> handFuQuestion(randomHand(random, WinMethod.TSUMO, allowChiitoitsu = true), random)
             QuizLevel.HAND_POINTS -> handPointsQuestion(randomHand(random, null, allowChiitoitsu = true), random)
@@ -147,12 +152,81 @@ object FuQuizGenerator {
 
     private fun waitChoice(wait: Wait) = "${wait.label}・${wait.fu}符"
 
-    // ---- 三段〜五段: 手牌の符 ----
+    // ---- 三段: 符の足し算と例外 ----
 
-    private fun handFuQuestion(hand: WinningHand, random: Random): Question.HandFu {
+    private fun fuSumQuestion(hand: WinningHand, random: Random): Question.FuSum {
+        val result = FuCalculator.calculate(hand)!!
+        val method = if (hand.method == WinMethod.RON) "ロン" else "ツモ"
+        val conditions = buildList {
+            add("${hand.roundWind.label}場・${hand.seatWind.label}家")
+            add(if (hand.isClosed) "門前で$method" else "鳴いて$method")
+            if (result.isChiitoitsu) {
+                add("七対子")
+            } else {
+                result.melds.forEach { add(meldCondition(it, hand)) }
+                add("雀頭 ${result.pair!!.label}")
+                add("${result.wait.label}待ち")
+            }
+        }
+        val (choices, answerIndex) = fuChoices(result.fu, ScoreCalculator.FU_VALUES, random)
+        return Question.FuSum(hand, conditions, choices, answerIndex, explainHand(result))
+    }
+
+    /** 面子を牌の絵なしで説明する（例: 暗刻 中 / チー 456筒 / ロンで完成した刻子 7索） */
+    private fun meldCondition(meld: Meld, hand: WinningHand): String {
+        val tile = meld.tile
+        return when (meld.kind) {
+            MeldKind.SEQUENCE ->
+                "${meld.label} ${tile.number}${tile.number + 1}${tile.number + 2}${tile.suit.label}"
+            MeldKind.TRIPLET -> when {
+                !meld.open -> "暗刻 ${tile.label}"
+                meld in hand.calledMelds -> "ポン ${tile.label}"
+                else -> "ロンで完成した刻子 ${tile.label}"
+            }
+            MeldKind.QUAD -> "${meld.label} ${tile.label}"
+        }
+    }
+
+    // ---- 四段〜七段: 手牌の符 ----
+
+    private fun handFuQuestion(hand: WinningHand, random: Random, split: Boolean = false): Question.HandFu {
         val result = FuCalculator.calculate(hand)!!
         val (choices, answerIndex) = fuChoices(result.fu, ScoreCalculator.FU_VALUES, random)
-        return Question.HandFu(hand, han = null, choices, answerIndex, explainHand(result))
+        return Question.HandFu(
+            hand = hand,
+            han = null,
+            groups = if (split) groupsOf(hand, result) else null,
+            choices = choices,
+            answerIndex = answerIndex,
+            explanation = explainHand(result),
+        )
+    }
+
+    /** 手牌を面子・雀頭ごとに区切る。和了牌で完成したグループに印を付ける */
+    fun groupsOf(hand: WinningHand, result: FuResult): List<TileGroupInfo> {
+        val method = if (hand.method == WinMethod.RON) "ロン" else "ツモ"
+        if (result.isChiitoitsu) {
+            return (hand.concealed + hand.winningTile).distinct().sorted().map { tile ->
+                val winning = tile == hand.winningTile
+                TileGroupInfo(listOf(tile, tile), winning, caption = if (winning) method else null)
+            }
+        }
+        // melds は手の中で完成した面子が先、鳴いた面子と暗槓が後ろに並んでいる
+        val concealedCount = result.melds.size - hand.calledMelds.size
+        val concealed = (0 until concealedCount).map { i ->
+            val winning = i == result.winningMeldIndex
+            TileGroupInfo(result.melds[i].tiles, winning, caption = if (winning) method else "手の中")
+        }
+        val tanki = result.winningMeldIndex == null
+        val pair = TileGroupInfo(
+            tiles = listOf(result.pair!!, result.pair),
+            winning = tanki,
+            caption = if (tanki) "雀頭・$method" else "雀頭",
+        )
+        val called = hand.calledMelds.map { meld ->
+            TileGroupInfo(meld.tiles, winning = false, caption = meld.label, faceDownEnds = meld.kind == MeldKind.QUAD && !meld.open)
+        }
+        return concealed + pair + called
     }
 
     private fun handPointsQuestion(hand: WinningHand, random: Random): Question.HandFu {
@@ -178,14 +252,21 @@ object FuQuizGenerator {
         val lines = result.items.map { "${it.label}: ${it.fu}符" }
         val total = when {
             result.isChiitoitsu -> "→ 七対子は25符"
-            result.isPinfu && result.fu == 20 -> "→ 平和ツモは20符"
-            result.isPinfu -> "→ 平和のロンは30符"
+            result.isPinfu && result.fu == 20 -> "→ $PINFU_SHAPE なので、ツモでも2符は付かず20符"
+            result.isPinfu -> "→ $PINFU_SHAPE のロンは30符"
             result.raw == 20 && result.fu == 30 -> "合計 20符 → 鳴いた手のロンで符が無いときは30符"
             result.raw == result.fu -> "合計 ${result.fu}符"
             else -> "合計 ${result.raw}符 → 切り上げて ${result.fu}符"
         }
-        val waitLine = if (result.isChiitoitsu) emptyList() else listOf("（${result.wait.label}待ちとして数える）")
-        return (lines + total + waitLine).joinToString("\n")
+        val notes = when {
+            result.isChiitoitsu -> emptyList()
+            result.isPinfu -> listOf("（${result.wait.label}待ちとして数える）")
+            else -> listOf(
+                "（${result.wait.label}待ちとして数える）",
+                "ここにない順子・役牌でない雀頭・両面や双碰の待ちは0符",
+            )
+        }
+        return (lines + total + notes).joinToString("\n")
     }
 
     /**
