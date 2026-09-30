@@ -46,12 +46,14 @@ object ScoreCalculator {
      * 実際に和了り得る組み合わせか。
      * - 20符は平和ツモのみ（平和＋ツモで最低2翻）
      * - 25符は七対子のみ（最低2翻、ツモなら門前ツモが付いて最低3翻）
+     * - 110符は暗刻や槓子が3つ必要で、三暗刻か三槓子が付くので最低2翻
      */
     fun isValid(hand: Hand): Boolean {
         if (hand.fu !in FU_VALUES || hand.han < 1) return false
         return when (hand.fu) {
             20 -> hand.method == WinMethod.TSUMO && hand.han >= 2
             25 -> hand.han >= if (hand.method == WinMethod.TSUMO) 3 else 2
+            110 -> hand.han >= 2
             else -> true
         }
     }

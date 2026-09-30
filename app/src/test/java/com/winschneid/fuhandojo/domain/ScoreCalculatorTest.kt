@@ -92,5 +92,8 @@ class ScoreCalculatorTest {
         assertTrue(ScoreCalculator.isValid(Hand(DEALER, TSUMO, 25, 3)))
         assertFalse(ScoreCalculator.isValid(Hand(NON_DEALER, RON, 35, 1)))
         assertFalse(ScoreCalculator.isValid(Hand(NON_DEALER, RON, 30, 0)))
+        // 110符は三暗刻か三槓子が付くので1翻では起こらない
+        assertFalse(ScoreCalculator.isValid(Hand(NON_DEALER, RON, 110, 1)))
+        assertTrue(ScoreCalculator.isValid(Hand(NON_DEALER, RON, 110, 2)))
     }
 }

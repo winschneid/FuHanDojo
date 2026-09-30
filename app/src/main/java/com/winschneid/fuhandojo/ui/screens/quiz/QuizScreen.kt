@@ -305,7 +305,12 @@ private fun Prompt(question: Question) {
                     ) {
                         Tag("${question.han}翻")
                         Text(
-                            text = "として（役とドラの合計）",
+                            // 役の内訳がある問題ではそれを見せる（復習リストに残っている古い問題には内訳がない）
+                            text = if (question.yaku.isNotEmpty()) {
+                                question.yaku.joinToString("・") { it.name }
+                            } else {
+                                "として（役とドラの合計）"
+                            },
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(start = 8.dp),
                         )

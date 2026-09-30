@@ -18,6 +18,7 @@ class ScoreTableTest {
         assertEquals(listOf(null, "1600", "3200", "6400"), labels(Seat.NON_DEALER, WinMethod.RON, 25))
         assertEquals(listOf("1000", "2000", "3900", "7700"), labels(Seat.NON_DEALER, WinMethod.RON, 30))
         assertEquals(listOf("1300", "2600", "5200", "8000"), labels(Seat.NON_DEALER, WinMethod.RON, 40))
+        assertEquals(listOf(null, "7100", "8000", "8000"), labels(Seat.NON_DEALER, WinMethod.RON, 110))
     }
 
     @Test

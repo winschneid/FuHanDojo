@@ -12,6 +12,7 @@ import com.winschneid.fuhandojo.domain.model.Wait
 import com.winschneid.fuhandojo.domain.model.WinMethod
 import com.winschneid.fuhandojo.domain.model.WinningHand
 import com.winschneid.fuhandojo.domain.model.Wind
+import com.winschneid.fuhandojo.domain.model.Yaku
 import kotlin.random.Random
 
 /** 符計算編（段）の問題を作る */
@@ -34,7 +35,7 @@ object FuQuizGenerator {
                 handFuQuestion(randomHand(random, null, allowChiitoitsu = true), random, split = true)
             QuizLevel.HAND_FU_RON -> handFuQuestion(randomHand(random, WinMethod.RON, allowChiitoitsu = false), random)
             QuizLevel.HAND_FU_TSUMO -> handFuQuestion(randomHand(random, WinMethod.TSUMO, allowChiitoitsu = true), random)
-            QuizLevel.HAND_POINTS -> handPointsQuestion(randomHand(random, null, allowChiitoitsu = true), random)
+            QuizLevel.HAND_POINTS -> handPointsQuestion(randomHand(random, null, allowChiitoitsu = true, plainYakuOnly = true), random)
             else -> error("$level は点数編の級です")
         }
     }
@@ -231,20 +232,25 @@ object FuQuizGenerator {
 
     private fun handPointsQuestion(hand: WinningHand, random: Random): Question.HandFu {
         val result = FuCalculator.calculate(hand)!!
-        // 役は網羅して判定していないので、翻数は問題の条件として与える。
-        // 少なくとも確実に付く役の分はあり、満貫未満の計算を練習できるよう4翻までにする
-        val minHan = guaranteedHan(hand, result).coerceAtLeast(1)
-        val han = if (minHan >= 4) minHan else random.nextInt(minHan, 5)
+        // ここに来る手は countedYaku 以外の役が付かない形なので、役とドラを足したものが正確な翻数になる。
+        // 満貫未満の計算を練習できるよう、ドラは合計4翻までの範囲で付ける
+        val shapeYaku = HandShapes.countedYaku(hand, result)
+        val room = (4 - shapeYaku.sumOf { it.han }).coerceIn(0, 2)
+        val dora = random.nextInt(room + 1)
+        val yaku = if (dora > 0) shapeYaku + Yaku("ドラ$dora", dora) else shapeYaku
+        val han = yaku.sumOf { it.han }
         val points = Hand(hand.seat, hand.method, result.fu, han)
         val fallback = ScoreCalculator.FU_VALUES.flatMap { fu -> (1..4).map { points.copy(fu = fu, han = it) } }
             .filter(ScoreCalculator::isValid)
         val (choices, answerIndex) = QuizGenerator.pointsChoices(points, showFu = true, fallback, random)
+        val hanLine = yaku.joinToString(" + ") { "${it.name} ${it.han}" } + " = ${han}翻"
         return Question.HandFu(
             hand = hand,
             han = han,
+            yaku = yaku,
             choices = choices,
             answerIndex = answerIndex,
-            explanation = explainHand(result) + "\n\n" + "${result.fu}符${han}翻（翻数は問題の指定）\n" + Explainer.explain(points),
+            explanation = explainHand(result) + "\n\n" + "${result.fu}符${han}翻（$hanLine）\n" + Explainer.explain(points),
         )
     }
 
@@ -269,25 +275,6 @@ object FuQuizGenerator {
         return (lines + total + notes).joinToString("\n")
     }
 
-    /**
-     * 形から確実に付く翻（リーチ・門前ツモ・平和・七対子・役牌・タンヤオ）の合計。門前の手はリーチしているものとする。
-     * ほかの役は判定しないので、実際の翻数の下限として使う。
-     */
-    fun guaranteedHan(hand: WinningHand, result: FuResult): Int {
-        var han = 0
-        if (hand.isClosed) han++
-        if (hand.isClosed && hand.method == WinMethod.TSUMO) han++
-        if (result.isPinfu) han++
-        if (result.isChiitoitsu) han += 2
-        result.melds.filter { it.kind != MeldKind.SEQUENCE }.forEach { meld ->
-            if (meld.tile.isDragon) han++
-            if (meld.tile.wind == hand.seatWind) han++
-            if (meld.tile.wind == hand.roundWind) han++
-        }
-        if (hand.allTiles.none { it.isTerminalOrHonor }) han++
-        return han
-    }
-
     /** 正解の符に近い値を誤答にした選択肢 */
     private fun fuChoices(answer: Int, values: List<Int>, random: Random): Pair<List<String>, Int> {
         val distractors = (values - answer).sortedBy { kotlin.math.abs(it - answer) }.take(4).shuffled(random).take(3)
@@ -305,8 +292,16 @@ object FuQuizGenerator {
         CHIITOITSU(10),
     }
 
-    /** 和了形として曖昧さがなく、役がある手を作る。method が null ならロンとツモを半々に */
-    fun randomHand(random: Random, method: WinMethod?, allowChiitoitsu: Boolean): WinningHand {
+    /**
+     * 和了形として曖昧さがなく、役がある手を作る。method が null ならロンとツモを半々に。
+     * plainYakuOnly なら、翻数に数える役（HandShapes.countedYaku）以外が付かない形だけにする。
+     */
+    fun randomHand(
+        random: Random,
+        method: WinMethod?,
+        allowChiitoitsu: Boolean,
+        plainYakuOnly: Boolean = false,
+    ): WinningHand {
         val types = HandType.entries.filter { allowChiitoitsu || it != HandType.CHIITOITSU }
         var r = random.nextInt(types.sumOf { it.weight })
         val type = types.first { r -= it.weight; r < 0 }
@@ -318,7 +313,7 @@ object FuQuizGenerator {
                 HandType.OPEN -> randomStandardHand(random, m, openHand = true, sequencesOnly = false)
                 HandType.CLOSED -> randomStandardHand(random, m, openHand = false, sequencesOnly = false)
             }
-            if (hand != null && isUsable(hand) && matches(type, hand)) return hand
+            if (hand != null && isUsable(hand, plainYakuOnly) && matches(type, hand)) return hand
         }
         error("出題できる手牌を作れませんでした")
     }
@@ -407,9 +402,11 @@ object FuQuizGenerator {
      * 出題に使える手か。
      * - どう取っても符と形（平和・七対子）が変わらない（取り方で答えが割れない）
      * - 110符以内で、連風牌の雀頭（ルールで2符か4符か分かれる）を含まない
-     * - 役がある（門前はリーチ、鳴いた手は役牌かタンヤオ）
+     * - 役満の形ではない（役満は符を数えない）
+     * - 役がある（門前はリーチ、鳴いた手は形から付く役がある）
+     * - plainYakuOnly なら、翻数に数える役以外が付かない（点数を答える問題で翻数を正確に出すため）
      */
-    fun isUsable(hand: WinningHand): Boolean {
+    fun isUsable(hand: WinningHand, plainYakuOnly: Boolean = false): Boolean {
         if (hand.allTiles.groupingBy { it }.eachCount().values.any { it > 4 }) return false
         val all = FuCalculator.interpretations(hand)
         if (all.isEmpty()) return false
@@ -420,7 +417,10 @@ object FuQuizGenerator {
         if (first.fu !in ScoreCalculator.FU_VALUES) return false
         val pair = first.pair
         if (pair != null && pair.wind != null && pair.wind == hand.roundWind && pair.wind == hand.seatWind) return false
+        // 役満は符を数えないので、符の練習には使わない
+        if (all.any { HandShapes.isYakumanShape(hand, it) }) return false
+        if (plainYakuOnly && all.any { HandShapes.hasUncountedYaku(hand, it) }) return false
         if (hand.isClosed) return true
-        return guaranteedHan(hand, first) > 0
+        return HandShapes.countedYaku(hand, first).isNotEmpty() || HandShapes.hasUncountedYaku(hand, first)
     }
 }

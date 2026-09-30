@@ -58,6 +58,12 @@ class FuQuizGeneratorTest {
                                 assertTrue("$q", q.hand.winningTile in winning.tiles)
                             }
                             if (q.asksPoints) {
+                                // 点数を答える問題は、内訳に挙げた役とドラだけで翻数が決まる形の手だけ
+                                val all = FuCalculator.interpretations(q.hand)
+                                assertTrue("$q", all.none { HandShapes.hasUncountedYaku(q.hand, it) })
+                                assertEquals("$q", q.han, q.yaku.sumOf { it.han })
+                                val shape = HandShapes.countedYaku(q.hand, result)
+                                assertEquals("$q", shape, q.yaku.filterNot { it.name.startsWith("ドラ") })
                                 val hand = Hand(q.hand.seat, q.hand.method, result.fu, q.han!!)
                                 assertTrue("$q", ScoreCalculator.isValid(hand))
                                 assertEquals(ScoreCalculator.payment(hand).label, q.answer)
@@ -80,7 +86,12 @@ class FuQuizGeneratorTest {
             assertEquals("$hand", 14 + quadCount, hand.allTiles.size)
             assertTrue("$hand", hand.allTiles.groupingBy { it }.eachCount().values.all { it <= 4 })
             val result = FuCalculator.calculate(hand)!!
-            if (!hand.isClosed) assertTrue("$hand", FuQuizGenerator.guaranteedHan(hand, result) > 0)
+            if (!hand.isClosed) {
+                val hasYaku = HandShapes.countedYaku(hand, result).isNotEmpty() || HandShapes.hasUncountedYaku(hand, result)
+                assertTrue("$hand", hasYaku)
+            }
+            // 役満の形は出さない
+            assertTrue("$hand", FuCalculator.interpretations(hand).none { HandShapes.isYakumanShape(hand, it) })
         }
     }
 

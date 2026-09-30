@@ -44,6 +44,10 @@ enum class QuizLevel(val course: Course, val rank: String, val title: String, va
     }
 }
 
+/** 翻の内訳（役やドラの名前と翻数） */
+@Serializable
+data class Yaku(val name: String, val han: Int)
+
 /**
  * 区切った手牌の1グループ（面子・雀頭・七対子の対子）。
  * winning は和了牌で完成したグループ、caption は下に添える説明（鳴いた面子の種類など）。
@@ -135,8 +139,8 @@ sealed interface Question {
     ) : Question
 
     /**
-     * 手牌全体の符を答える。han があるときは、その翻数（役とドラの合計として問題で指定）で点数を答える。
-     * 役の判定はアプリで網羅していないので、翻の内訳は見せず条件として与える。
+     * 手牌全体の符を答える。han があるときは、その翻数で点数を答える。yaku はその内訳（役とドラ）。
+     * 点数を答える問題には、yaku に挙げた役以外が付かない形の手だけを出す。
      * groups があるときは、手牌を面子・雀頭ごとに区切って見せる。
      */
     @Serializable
@@ -145,6 +149,7 @@ sealed interface Question {
         val hand: WinningHand,
         val han: Int?,
         val groups: List<TileGroupInfo>? = null,
+        val yaku: List<Yaku> = emptyList(),
         override val choices: List<String>,
         override val answerIndex: Int,
         override val explanation: String,
