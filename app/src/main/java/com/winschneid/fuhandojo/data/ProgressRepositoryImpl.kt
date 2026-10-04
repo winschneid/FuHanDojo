@@ -2,8 +2,10 @@ package com.winschneid.fuhandojo.data
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import com.winschneid.fuhandojo.domain.TutorialStep
 import com.winschneid.fuhandojo.domain.model.QuizLevel
 import com.winschneid.fuhandojo.domain.repository.ProgressRepository
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +29,16 @@ class ProgressRepositoryImpl @Inject constructor(
         }
         return previous
     }
+
+    override fun completedTutorialSteps(): Flow<Set<TutorialStep>> = dataStore.data.map { prefs ->
+        TutorialStep.entries.filter { prefs[tutorialKey(it)] == true }.toSet()
+    }
+
+    override suspend fun markTutorialStepCompleted(step: TutorialStep) {
+        dataStore.edit { it[tutorialKey(step)] = true }
+    }
+
+    private fun tutorialKey(step: TutorialStep) = booleanPreferencesKey("tutorial_done_${step.name}")
 
     // enum の name をキーにするので、QuizLevel の名前を変えると記録が引き継がれない
     private fun bestScoreKey(level: QuizLevel) = intPreferencesKey("best_score_${level.name}")

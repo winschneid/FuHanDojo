@@ -12,6 +12,7 @@ import com.winschneid.fuhandojo.ui.screens.home.HomeScreen
 import com.winschneid.fuhandojo.ui.screens.quiz.QuizScreen
 import com.winschneid.fuhandojo.ui.screens.review.ReviewScreen
 import com.winschneid.fuhandojo.ui.screens.table.ScoreTableScreen
+import com.winschneid.fuhandojo.ui.screens.tutorial.TutorialScreen
 
 /**
  * 遷移中（前面にない間）の操作は無視する。
@@ -34,6 +35,9 @@ fun NavGraph() {
                 },
                 onStartReview = {
                     if (entry.isResumed()) navController.navigate(Routes.Review.route)
+                },
+                onOpenTutorial = {
+                    if (entry.isResumed()) navController.navigate(Routes.Tutorial.route)
                 },
             )
         }
@@ -65,6 +69,20 @@ fun NavGraph() {
             ReviewScreen(
                 onNavigateBack = {
                     if (entry.isResumed()) navController.popBackStack()
+                },
+            )
+        }
+        composable(Routes.Tutorial.route) { entry ->
+            TutorialScreen(
+                onNavigateBack = {
+                    if (entry.isResumed()) navController.popBackStack()
+                },
+                onStartLevel = { level ->
+                    if (entry.isResumed()) {
+                        navController.navigate(Routes.Quiz.createRoute(level)) {
+                            popUpTo(Routes.Home.route)
+                        }
+                    }
                 },
             )
         }

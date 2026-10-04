@@ -22,6 +22,9 @@
 
 ### 符計算編（段）
 
+符計算編の先頭には「入門 符のおぼえ方」があり、面子・雀頭・待ちの符をルール1つずつ覚えられます
+（説明のあとに4問、3問正解でステップ完了。順子と刻子／1・9・字牌は2倍／槓子は刻子の4倍／雀頭の符／待ちの符の5ステップ）。
+
 | 段 | 内容 |
 |---|---|
 | 初段 | 面子の符（明刻・暗刻・明槓・暗槓、ヤオ九牌は2倍） |
@@ -60,6 +63,7 @@
 - `domain/ScoreCalculator.kt` 点数計算、`domain/QuizGenerator.kt` 点数編の出題と解説
 - `domain/FuCalculator.kt` 符計算、`domain/FuQuizGenerator.kt` 符計算編の出題と手牌の生成
 - `domain/HandShapes.kt` 手牌の形から付く役の判定（出題する手の選別と翻数の内訳）
+- `domain/Tutorial.kt` 入門のステップ（ルールの説明・例・問題）
 - `domain/ScoreTable.kt` 早見表のデータ（クイズと同じ計算から作る）
 - `ui/components/Tiles.kt` 牌の描画
 - `domain/Review.kt` 復習リストの追加・卒業・出題順の規則

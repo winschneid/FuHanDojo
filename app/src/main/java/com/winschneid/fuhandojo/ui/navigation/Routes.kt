@@ -10,4 +10,5 @@ sealed class Routes(val route: String) {
     }
     data object ScoreTable : Routes("score_table")
     data object Review : Routes("review")
+    data object Tutorial : Routes("tutorial")
 }

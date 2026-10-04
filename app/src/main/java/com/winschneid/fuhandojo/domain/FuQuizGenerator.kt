@@ -59,9 +59,22 @@ object FuQuizGenerator {
                 else -> Tile(Suit.HONOR, random.nextInt(1, 8))
             }
         }
-        val meld = Meld(kind, tile, open)
-        val (choices, answerIndex) = fuChoices(meld.fu, MELD_FU_VALUES, random)
-        return Question.MeldFu(meld, choices, answerIndex, explainMeld(meld) + "\n\n" + MELD_GUIDE)
+        return meldQuestionFor(Meld(kind, tile, open), MELD_FU_VALUES, random, MELD_GUIDE)
+    }
+
+    /**
+     * 決まった面子の符を問う問題。values が4つ以下ならすべてを選択肢にし、多ければ答えに近い4つにする。
+     * guide は解説の後ろに添える一覧（入門では使わない）。
+     */
+    internal fun meldQuestionFor(meld: Meld, values: List<Int>, random: Random, guide: String?): Question.MeldFu {
+        val (choices, answerIndex) = if (values.size <= 4) {
+            val sorted = values.sorted()
+            sorted.map { "${it}符" } to sorted.indexOf(meld.fu)
+        } else {
+            fuChoices(meld.fu, values, random)
+        }
+        val explanation = if (guide != null) explainMeld(meld) + "\n\n" + guide else explainMeld(meld)
+        return Question.MeldFu(meld, choices, answerIndex, explanation)
     }
 
     private fun explainMeld(meld: Meld): String {
@@ -88,28 +101,39 @@ object FuQuizGenerator {
             val seatWind = Wind.entries.random(random)
             // 連風牌（場風かつ自風）の雀頭は2符か4符かがルールで分かれるので出さない
             if (pair.wind != null && pair.wind == roundWind && pair.wind == seatWind) continue
-            val fu = FuCalculator.pairFu(pair, roundWind, seatWind)
-            val choices = listOf("0符", "2符", "4符")
-            val reason = when {
-                pair.isDragon -> "三元牌なので2符。"
-                pair.wind == seatWind -> "自風（${seatWind.label}家）なので2符。"
-                pair.wind == roundWind -> "場風（${roundWind.label}場）なので2符。"
-                pair.isHonor -> "場風でも自風でもない風牌なので0符。"
-                else -> "数牌なので0符。"
-            }
-            return Question.PairFu(
-                pair = pair,
-                roundWind = roundWind,
-                seatWind = seatWind,
-                choices = choices,
-                answerIndex = choices.indexOf("${fu}符"),
-                explanation = "${pair.label}の雀頭は$reason\n\n$PAIR_GUIDE",
-            )
+            return pairQuestionFor(pair, roundWind, seatWind, listOf("0符", "2符", "4符"), PAIR_GUIDE)
         }
     }
 
-    private fun waitQuestion(random: Random): Question.WaitFu {
-        val wait = Wait.entries.random(random)
+    /** 決まった雀頭の符を問う問題。guide は解説の後ろに添える一覧（入門では使わない） */
+    internal fun pairQuestionFor(
+        pair: Tile,
+        roundWind: Wind,
+        seatWind: Wind,
+        choices: List<String>,
+        guide: String?,
+    ): Question.PairFu {
+        val fu = FuCalculator.pairFu(pair, roundWind, seatWind)
+        val reason = when {
+            pair.isDragon -> "三元牌なので2符。"
+            pair.wind == seatWind -> "自風（${seatWind.label}家）なので2符。"
+            pair.wind == roundWind -> "場風（${roundWind.label}場）なので2符。"
+            pair.isHonor -> "場風でも自風でもない風牌なので0符。"
+            else -> "数牌なので0符。"
+        }
+        val explanation = "${pair.label}の雀頭は$reason"
+        return Question.PairFu(
+            pair = pair,
+            roundWind = roundWind,
+            seatWind = seatWind,
+            choices = choices,
+            answerIndex = choices.indexOf("${fu}符"),
+            explanation = if (guide != null) "$explanation\n\n$guide" else explanation,
+        )
+    }
+
+    /** 待ちの名前と符を問う問題。wait を指定しなければ5種類から選ぶ */
+    internal fun waitQuestion(random: Random, wait: Wait = Wait.entries.random(random)): Question.WaitFu {
         val suit = NUMBER_SUITS.random(random)
         val (shape, winningTile) = when (wait) {
             Wait.RYANMEN -> {

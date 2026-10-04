@@ -23,6 +23,8 @@ data class HomeUiState(
     val levels: List<LevelItem> = emptyList(),
     /** 復習リストにある問題の数 */
     val reviewCount: Int = 0,
+    /** 入門で完了したステップの数 */
+    val tutorialCompletedCount: Int = 0,
     val isLoading: Boolean = true,
 )
 
@@ -32,8 +34,17 @@ class HomeViewModel @Inject constructor(
     reviewRepository: ReviewRepository,
 ) : ViewModel() {
 
-    val uiState = combine(progressRepository.bestScores(), reviewRepository.items()) { bestScores, reviewItems ->
-        HomeUiState(levels = levelItemsOf(bestScores), reviewCount = reviewItems.size, isLoading = false)
+    val uiState = combine(
+        progressRepository.bestScores(),
+        reviewRepository.items(),
+        progressRepository.completedTutorialSteps(),
+    ) { bestScores, reviewItems, tutorial ->
+        HomeUiState(
+            levels = levelItemsOf(bestScores),
+            reviewCount = reviewItems.size,
+            tutorialCompletedCount = tutorial.size,
+            isLoading = false,
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
