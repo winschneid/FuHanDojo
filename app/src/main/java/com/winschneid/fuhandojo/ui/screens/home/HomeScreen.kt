@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.winschneid.fuhandojo.domain.ReviewList
+import com.winschneid.fuhandojo.domain.TutorialStep
+import com.winschneid.fuhandojo.domain.model.Course
 import com.winschneid.fuhandojo.domain.model.QuizLevel
 import com.winschneid.fuhandojo.ui.theme.FuHanDojoTheme
 
@@ -46,6 +48,7 @@ fun HomeScreen(
     onStartLevel: (QuizLevel) -> Unit,
     onOpenScoreTable: () -> Unit,
     onStartReview: () -> Unit,
+    onOpenTutorial: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -54,6 +57,7 @@ fun HomeScreen(
         onStartLevel = onStartLevel,
         onOpenScoreTable = onOpenScoreTable,
         onStartReview = onStartReview,
+        onOpenTutorial = onOpenTutorial,
     )
 }
 
@@ -64,6 +68,7 @@ fun HomeContent(
     onStartLevel: (QuizLevel) -> Unit,
     onOpenScoreTable: () -> Unit,
     onStartReview: () -> Unit,
+    onOpenTutorial: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -110,6 +115,11 @@ fun HomeContent(
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 8.dp),
                     )
+                }
+                if (course == Course.FU) {
+                    item(key = "tutorial") {
+                        TutorialCard(completed = uiState.tutorialCompletedCount, onClick = onOpenTutorial)
+                    }
                 }
                 items(levels, key = { it.level.name }) { item ->
                     LevelCard(item = item, onClick = { onStartLevel(item.level) })
@@ -190,6 +200,7 @@ private fun HomeContentPreview() {
             onStartLevel = {},
             onOpenScoreTable = {},
             onStartReview = {},
+            onOpenTutorial = {},
         )
     }
 }
@@ -226,6 +237,35 @@ private fun ReviewCard(count: Int, onClick: () -> Unit) {
             ) {
                 Text("復習する")
             }
+        }
+    }
+}
+
+@Composable
+private fun TutorialCard(completed: Int, onClick: () -> Unit) {
+    val total = TutorialStep.entries.size
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text("入門 符のおぼえ方", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "面子・雀頭・待ちの符をルール1つずつ覚える（${total}ステップ）",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            Text(
+                text = if (completed >= total) "完了" else "$completed / $total",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 12.dp),
+            )
         }
     }
 }
