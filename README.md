@@ -24,15 +24,16 @@
 
 符計算編の先頭には「入門 符のおぼえ方」があり、面子・雀頭・待ちの符をルール1つずつ覚えられます
 （説明のあとに4問、3問正解でステップ完了。順子と刻子／1・9・字牌は2倍／槓子は刻子の4倍／雀頭の符／待ちの符の5ステップ）。
+ステップはどれからでも始められ、完了したステップは保存されます。入門を終えていなくても初段には挑戦できます。
 
 | 段 | 内容 |
 |---|---|
 | 初段 | 面子の符（明刻・暗刻・明槓・暗槓、ヤオ九牌は2倍） |
-| 二段 | 雀頭と待ちの符 |
+| 二段 | 雀頭と待ちの符（役牌の雀頭、カンチャン・ペンチャン・単騎の待ち） |
 | 三段 | 符の足し算と例外（牌を見せず部品を文字で示す。平和・七対子・鳴いた手の30符） |
 | 四段 | 区切った手牌の符（面子・雀頭ごとに区切って表示） |
 | 五段 | 手牌の符（ロン。自分で面子に分ける） |
-| 六段 | 手牌の符（ツモ） |
+| 六段 | 手牌の符（ツモ。平和ツモ・七対子も） |
 | 七段 | 手牌から点数（役とドラの内訳を表示） |
 
 部品 → 足し算と例外 → 牌を読む → 分け方まで自分で、と1段ごとに新しいことが1つだけ増える順番です。
@@ -49,24 +50,36 @@
 級・段のクイズで間違えた問題は、その場で復習リストに保存されます。ホームの「復習」から最大10問ずつ解き直せます。
 12時間以上あけて2回続けて正解すると、覚えた問題としてリストから外れます（間違えると回数は0に戻ります）。
 直後にもう一度正解しても覚えたとは言えないので、時間をおいて思い出せたときだけ数えます。
+復習リストに保存するのは200問までで、超えた分は古いものから消えます。入門の問題は復習リストに入りません。
 
 ### 早見表
 
-ホーム右上の「早見表」から、点数表（子/親・ロン/ツモ、満貫以上）と符の数え方をいつでも見られます。
+ホーム右上の「早見表」から、点数表と符の数え方をいつでも見られます。
+
+- 「点数」タブ: 子/親・ロン/ツモごとの 20〜110符 × 1〜4翻の表と、満貫以上の点数
+- 「符」タブ: 数え方の手順、アガリ方・面子・雀頭・待ちの符、決まった符になる手（平和・七対子など）
 
 点数は切り上げ満貫なし（30符4翻 = 7700）、13翻以上は数え役満の一般的なルールで計算します。
 
 ## 構成
 
-- Kotlin / Jetpack Compose / Material 3
-- Hilt（DI）、DataStore（級ごとの最高正解数と復習リストを保存）、kotlinx.serialization（復習リストの JSON 化）
+- Kotlin / Jetpack Compose / Material 3 / Navigation Compose（minSdk 24、compileSdk 36）
+- Hilt（DI）、DataStore（級・段ごとの最高正解数、入門の完了ステップ、復習リストを保存）、kotlinx.serialization（復習リストの JSON 化）
+
+`app/src/main/java/com/winschneid/fuhandojo/` 以下:
+
+- `domain/model/` 牌（`Tile.kt`）、手（`Hand.kt`）、級・段と問題（`Quiz.kt`）
 - `domain/ScoreCalculator.kt` 点数計算、`domain/QuizGenerator.kt` 点数編の出題と解説
 - `domain/FuCalculator.kt` 符計算、`domain/FuQuizGenerator.kt` 符計算編の出題と手牌の生成
 - `domain/HandShapes.kt` 手牌の形から付く役の判定（出題する手の選別と翻数の内訳）
 - `domain/Tutorial.kt` 入門のステップ（ルールの説明・例・問題）
-- `domain/ScoreTable.kt` 早見表のデータ（クイズと同じ計算から作る）
-- `ui/components/Tiles.kt` 牌の描画
 - `domain/Review.kt` 復習リストの追加・卒業・出題順の規則
+- `domain/ScoreTable.kt` 早見表のデータ（クイズと同じ計算から作る）
+- `domain/repository/` と `data/` 進捗と復習リストの保存（インターフェースと DataStore の実装）
+- `ui/screens/` ホーム（`home`）、クイズ（`quiz`）、入門（`tutorial`）、復習（`review`）、早見表（`table`）の各画面
+- `ui/components/Tiles.kt` 牌の描画、`ui/navigation/` 画面遷移
+
+級・段（`QuizLevel`）と入門のステップ（`TutorialStep`）の名前は保存キーに、問題の `SerialName` は復習リストの JSON に使うので、変えると保存済みのデータが読めなくなります。
 
 ## ビルドとテスト
 
@@ -74,3 +87,19 @@
 ./gradlew assembleDebug
 ./gradlew testDebugUnitTest
 ```
+
+### リリースビルド
+
+```
+./gradlew bundleRelease
+```
+
+署名の情報はリポジトリに含めません。プロジェクト直下の `keystore.properties`、または環境変数で指定します。
+どちらも無いときは、リリース用の鍵で署名されません。
+
+| `keystore.properties` | 環境変数 |
+|---|---|
+| `storeFile` | `RELEASE_STORE_FILE` |
+| `storePassword` | `RELEASE_STORE_PASSWORD` |
+| `keyAlias` | `RELEASE_KEY_ALIAS` |
+| `keyPassword` | `RELEASE_KEY_PASSWORD` |
