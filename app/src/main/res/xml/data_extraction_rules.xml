@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12 以降のバックアップと機種変更。APIキー（secrets）は端末の外に出さない -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="datastore/secrets.preferences_pb" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="datastore/secrets.preferences_pb" />
+    </device-transfer>
+</data-extraction-rules>

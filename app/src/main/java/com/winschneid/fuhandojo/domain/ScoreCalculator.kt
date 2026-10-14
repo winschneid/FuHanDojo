@@ -25,20 +25,23 @@ object ScoreCalculator {
     fun basePoints(fu: Int, han: Int): Int =
         limitOf(fu, han)?.basePoints ?: rawBasePoints(fu, han)
 
-    fun payment(hand: Hand): Payment {
-        val base = basePoints(hand.fu, hand.han)
-        return when (hand.method) {
-            WinMethod.RON -> when (hand.seat) {
-                Seat.NON_DEALER -> Payment.Ron(roundUp100(base * 4))
-                Seat.DEALER -> Payment.Ron(roundUp100(base * 6))
-            }
-            WinMethod.TSUMO -> when (hand.seat) {
-                Seat.NON_DEALER -> Payment.NonDealerTsumo(
-                    fromNonDealer = roundUp100(base),
-                    fromDealer = roundUp100(base * 2),
-                )
-                Seat.DEALER -> Payment.DealerTsumo(each = roundUp100(base * 2))
-            }
+    fun payment(hand: Hand): Payment = paymentForBase(basePoints(hand.fu, hand.han), hand.seat, hand.method)
+
+    /**
+     * 基本点から支払いを求める。役満の複合（基本点 8000 × 倍数）や本場もここで扱う。
+     * 本場はロンなら1本につき300点、ツモなら支払う人それぞれに100点を足す。
+     */
+    fun paymentForBase(base: Int, seat: Seat, method: WinMethod, honba: Int = 0): Payment = when (method) {
+        WinMethod.RON -> when (seat) {
+            Seat.NON_DEALER -> Payment.Ron(roundUp100(base * 4) + honba * 300)
+            Seat.DEALER -> Payment.Ron(roundUp100(base * 6) + honba * 300)
+        }
+        WinMethod.TSUMO -> when (seat) {
+            Seat.NON_DEALER -> Payment.NonDealerTsumo(
+                fromNonDealer = roundUp100(base) + honba * 100,
+                fromDealer = roundUp100(base * 2) + honba * 100,
+            )
+            Seat.DEALER -> Payment.DealerTsumo(each = roundUp100(base * 2) + honba * 100)
         }
     }
 

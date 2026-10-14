@@ -278,7 +278,8 @@ object FuQuizGenerator {
         )
     }
 
-    private fun explainHand(result: FuResult): String {
+    /** 符の内訳と合計を説明する文章（点数計算の画面でも使う） */
+    internal fun explainHand(result: FuResult): String {
         val lines = result.items.map { "${it.label}: ${it.fu}符" }
         val total = when {
             result.isChiitoitsu -> "→ 七対子は25符"

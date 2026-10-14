@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 以下のバックアップ。APIキー（secrets）は端末の外に出さない -->
+<full-backup-content>
+    <exclude domain="file" path="datastore/secrets.preferences_pb" />
+</full-backup-content>

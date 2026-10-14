@@ -61,10 +61,30 @@
 
 点数は切り上げ満貫なし（30符4翻 = 7700）、13翻以上は数え役満の一般的なルールで計算します。
 
+### 点数計算
+
+ホーム右上の「計算」から、実際の手を入力して点数を出せます。
+
+- 牌のキーボードで手牌を入れ（最後に入れた牌がアガリ牌）、チー・ポン・明槓・暗槓も入力できる
+- アガリ方、場風・自風、リーチ、一発、海底・河底、嶺上開花、槍槓、ドラ・赤ドラ・裏ドラ、本場を選ぶ
+- 役と翻、符の内訳、点数の求め方を表示する。面子の取り方が複数あるときは、点数がいちばん高い取り方を採用する
+- ルール: 喰いタンあり、切り上げ満貫なし、数え役満あり、役満の複合あり（ダブル役満なし）、連風牌の雀頭は4符、嶺上開花のツモ符あり。
+  天和・地和・流し満貫・供託は扱わない
+
+### 写真から読み取る（試験的）
+
+点数計算の画面で手牌の写真を撮る（または選ぶ）と、Claude API（`claude-opus-5-5`、公式 Java SDK）で牌を読み取って入力欄に入れます。
+読み取り結果は手で直せます。赤5は赤ドラの枚数に反映します。ロン・ツモや風などの条件は、写真からはわからないので手で選びます。
+
+- 使うには、自分の Claude API キー（console.anthropic.com で発行）をアプリに入力する。キーは端末内の別ファイルに保存し、バックアップの対象外
+- 読み取るたびに、写真（長辺 1568px に縮めた JPEG）が Anthropic に送られ、API の利用料金がかかる
+- 個人で試すための仕組みです。一般に公開する場合は、APIキーをアプリに持たせず、中継サーバーを用意する必要がある
+
 ## 構成
 
 - Kotlin / Jetpack Compose / Material 3 / Navigation Compose（minSdk 24、compileSdk 36）
-- Hilt（DI）、DataStore（級・段ごとの最高正解数、入門の完了ステップ、復習リストを保存）、kotlinx.serialization（復習リストの JSON 化）
+- Hilt（DI）、DataStore（級・段ごとの最高正解数、入門の完了ステップ、復習リスト、APIキーを保存）、kotlinx.serialization（復習リストの JSON 化）
+- Anthropic Java SDK（写真からの牌の読み取り）。R8 で消されないよう `app/proguard-rules.pro` で除外している
 
 `app/src/main/java/com/winschneid/fuhandojo/` 以下:
 
@@ -75,8 +95,10 @@
 - `domain/Tutorial.kt` 入門のステップ（ルールの説明・例・問題）
 - `domain/Review.kt` 復習リストの追加・卒業・出題順の規則
 - `domain/ScoreTable.kt` 早見表のデータ（クイズと同じ計算から作る）
-- `domain/repository/` と `data/` 進捗と復習リストの保存（インターフェースと DataStore の実装）
-- `ui/screens/` ホーム（`home`）、クイズ（`quiz`）、入門（`tutorial`）、復習（`review`）、早見表（`table`）の各画面
+- `domain/Scoring.kt` 点数計算の画面で使う全役の判定と点数
+- `domain/TileRecognition.kt` 写真の読み取りの指示・JSON スキーマ・結果の解釈
+- `domain/repository/` と `data/` 進捗・復習リスト・APIキーの保存、Claude API での読み取り（`ClaudeTileRecognizer`）、写真の縮小（`ImagePreparer`）
+- `ui/screens/` ホーム（`home`）、クイズ（`quiz`）、入門（`tutorial`）、復習（`review`）、早見表（`table`）、点数計算（`calculator`）の各画面
 - `ui/components/Tiles.kt` 牌の描画、`ui/navigation/` 画面遷移
 
 級・段（`QuizLevel`）と入門のステップ（`TutorialStep`）の名前は保存キーに、問題の `SerialName` は復習リストの JSON に使うので、変えると保存済みのデータが読めなくなります。

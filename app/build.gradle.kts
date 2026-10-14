@@ -62,12 +62,20 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // Anthropic SDK が java.time を使うため、minSdk 24〜25 でも動くよう標準ライブラリを補う
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "11"
     }
     buildFeatures {
         compose = true
+    }
+    packaging {
+        resources {
+            // SDK が使うライブラリに同じ名前の説明ファイルが入っているため、アプリには含めない
+            excludes += setOf("META-INF/DEPENDENCIES", "META-INF/LICENSE*", "META-INF/NOTICE*", "META-INF/INDEX.LIST")
+        }
     }
 }
 
@@ -84,6 +92,10 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.serialization.json)
+    // 写真から牌を読み取るための Claude API（公式 Java SDK）と、写真の向きの補正
+    implementation(libs.anthropic.java)
+    implementation(libs.androidx.exifinterface)
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
     implementation(libs.material)
 
     // Hilt
