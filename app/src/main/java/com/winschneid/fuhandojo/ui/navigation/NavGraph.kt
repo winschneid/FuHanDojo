@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.winschneid.fuhandojo.ui.screens.calculator.CalculatorScreen
 import com.winschneid.fuhandojo.ui.screens.home.HomeScreen
 import com.winschneid.fuhandojo.ui.screens.quiz.QuizScreen
 import com.winschneid.fuhandojo.ui.screens.review.ReviewScreen
@@ -39,6 +40,9 @@ fun NavGraph() {
                 onOpenTutorial = {
                     if (entry.isResumed()) navController.navigate(Routes.Tutorial.route)
                 },
+                onOpenCalculator = {
+                    if (entry.isResumed()) navController.navigate(Routes.Calculator.route)
+                },
             )
         }
         composable(
@@ -67,6 +71,13 @@ fun NavGraph() {
         }
         composable(Routes.Review.route) { entry ->
             ReviewScreen(
+                onNavigateBack = {
+                    if (entry.isResumed()) navController.popBackStack()
+                },
+            )
+        }
+        composable(Routes.Calculator.route) { entry ->
+            CalculatorScreen(
                 onNavigateBack = {
                     if (entry.isResumed()) navController.popBackStack()
                 },

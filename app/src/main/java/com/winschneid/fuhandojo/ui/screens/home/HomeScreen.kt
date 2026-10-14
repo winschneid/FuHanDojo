@@ -49,6 +49,7 @@ fun HomeScreen(
     onOpenScoreTable: () -> Unit,
     onStartReview: () -> Unit,
     onOpenTutorial: () -> Unit,
+    onOpenCalculator: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -58,6 +59,7 @@ fun HomeScreen(
         onOpenScoreTable = onOpenScoreTable,
         onStartReview = onStartReview,
         onOpenTutorial = onOpenTutorial,
+        onOpenCalculator = onOpenCalculator,
     )
 }
 
@@ -69,12 +71,14 @@ fun HomeContent(
     onOpenScoreTable: () -> Unit,
     onStartReview: () -> Unit,
     onOpenTutorial: () -> Unit,
+    onOpenCalculator: () -> Unit,
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("符ハン道場") },
                 actions = {
+                    TextButton(onClick = onOpenCalculator) { Text("計算") }
                     TextButton(onClick = onOpenScoreTable) { Text("早見表") }
                 },
             )
@@ -201,6 +205,7 @@ private fun HomeContentPreview() {
             onOpenScoreTable = {},
             onStartReview = {},
             onOpenTutorial = {},
+            onOpenCalculator = {},
         )
     }
 }
